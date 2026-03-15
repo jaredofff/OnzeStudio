@@ -1,5 +1,5 @@
 --[[
-    onzeHub - How to Train Your Dragon (Élite)
+    onzeHub - How to Train Your Dragon (Élite Debug)
     ID: 75663528075786
 ]]
 
@@ -17,25 +17,24 @@ function Module.Load(Tabs, Window, Fluent, Options)
     
     Tabs.Specific:AddToggle("AutoFarm", {
         Title = "Auto Farm XP (Combate)",
-        Description = "Ataca automáticamente a mobs cercanos para subir nivel",
+        Description = "Ataca mobs cercanos. Úsalo cerca de enemigos.",
         Default = false,
         Callback = function(Value)
             _G.DragonFarm = Value
+            if Value then
+                Fluent:Notify({Title = "onzeHub", Content = "Auto Farm ACTIVADO. Acércate a un enemigo.", Duration = 3})
+            end
             task.spawn(function()
                 while _G.DragonFarm do
                     pcall(function()
                         local lp = game.Players.LocalPlayer
                         local char = lp.Character
                         if char and char:FindFirstChild("HumanoidRootPart") then
-                            -- Buscar enemigos (Mobs) en el Workspace
-                            -- Nota: En este juego los mobs suelen estar en carpetas como 'Mobs' o directamente en Workspace
                             for _, mob in pairs(workspace:GetChildren()) do
                                 if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 and mob:FindFirstChild("HumanoidRootPart") then
                                     local dist = (char.HumanoidRootPart.Position - mob.HumanoidRootPart.Position).Magnitude
-                                    if dist < 50 then
-                                        -- Simulación de ataque (Click o Remote)
+                                    if dist < 40 then
                                         game:GetService("VirtualInputManager"):ClickButton1(Vector2.new(0,0))
-                                        task.wait(0.5)
                                     end
                                 end
                             end
@@ -48,11 +47,14 @@ function Module.Load(Tabs, Window, Fluent, Options)
     })
 
     Tabs.Specific:AddToggle("AutoClicker", {
-        Title = "Auto Clicker (Ataque Rápido)",
-        Description = "Hace clicks automáticos constantes",
+        Title = "Auto Clicker (Ataque)",
+        Description = "Clicks constantes para daño máximo",
         Default = false,
         Callback = function(Value)
             _G.AutoAttack = Value
+            if Value then
+                Fluent:Notify({Title = "onzeHub", Content = "Auto Clicker ACTIVADO.", Duration = 2})
+            end
             task.spawn(function()
                 while _G.AutoAttack do
                     pcall(function()
@@ -68,8 +70,7 @@ function Module.Load(Tabs, Window, Fluent, Options)
     Tabs.Specific:AddSection("Atributos del Dragón")
     
     Tabs.Specific:AddSlider("WalkSpeed", {
-        Title = "Velocidad de Movimiento",
-        Description = "Aumenta la velocidad al caminar y volar",
+        Title = "Velocidad",
         Default = 16,
         Min = 16,
         Max = 250,
@@ -79,23 +80,29 @@ function Module.Load(Tabs, Window, Fluent, Options)
             local char = game.Players.LocalPlayer.Character
             if char and char:FindFirstChild("Humanoid") then
                 char.Humanoid.WalkSpeed = Value
+                Fluent:Notify({Title = "onzeHub", Content = "Velocidad ajustada a: " .. Value, Duration = 1})
             end
         end
     })
 
     Tabs.Specific:AddToggle("InfStamina", {
         Title = "Stamina Infinita (Vuelo)",
-        Description = "Te permite volar sin cansarte (Si el juego lo permite)",
         Default = false,
         Callback = function(Value)
             _G.InfiniteStamina = Value
+            if Value then
+                Fluent:Notify({Title = "onzeHub", Content = "Stamina Infinita ACTIVADA.", Duration = 2})
+            end
             task.spawn(function()
                 while _G.InfiniteStamina do
                     pcall(function()
-                        -- Buscar valores de Stamina en el Personaje o PlayerGui
-                        local stamina = game.Players.LocalPlayer.Character:FindFirstChild("Stamina", true) or game.Players.LocalPlayer:FindFirstChild("Stamina", true)
-                        if stamina and stamina:IsA("NumberValue") or stamina:IsA("IntValue") then
-                            stamina.Value = 100
+                        local lp = game.Players.LocalPlayer
+                        local char = lp.Character
+                        if char then
+                            local stam = char:FindFirstChild("Stamina", true)
+                            if stam and (stam:IsA("NumberValue") or stam:IsA("IntValue")) then
+                                stam.Value = 100
+                            end
                         end
                     end)
                     task.wait(0.5)
@@ -108,8 +115,14 @@ function Module.Load(Tabs, Window, Fluent, Options)
     Tabs.Specific:AddSection("Utilidades VIP")
 
     Tabs.Specific:AddButton({
-        Title = "Canjear Todos los Códigos META",
-        Description = "Canjea automáticamente códigos de Trait Rerolls y Huevos",
+        Title = "PROBAR: Notificación de Test",
+        Callback = function()
+            Fluent:Notify({Title = "onzeHub", Content = "¡Si ves esto, el script está respondiendo!", Duration = 5})
+        end
+    })
+
+    Tabs.Specific:AddButton({
+        Title = "Canjear Códigos Actualizados",
         Callback = function()
             local codes = {
                 "DRAGONS", "ONAROLL", "COOKING", "THANKYOU20K", "SNOGGLETOG", 
@@ -117,21 +130,18 @@ function Module.Load(Tabs, Window, Fluent, Options)
                 "ITTAKESTWO", "PEACOCKEGG", "USEYURHEAD", "DRAGONS4L", 
                 "ABCDEF", "EGGCELENT", "RISKYR", "SORRY4DELAY"
             }
-            local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Events", true) and game:GetService("ReplicatedStorage"):FindFirstChild("Events", true):FindFirstChild("RedeemCode")
-            
+            Fluent:Notify({Title = "onzeHub", Content = "Iniciando canje masivo...", Duration = 3})
             for _, code in pairs(codes) do
-                if remote then
-                    remote:FireServer(code)
-                else
-                    -- Fallback: Notificar si no se encuentra el remote
-                    Fluent:Notify({
-                        Title = "onzeHub",
-                        Content = "Intentando canjear: " .. code,
-                        Duration = 2
-                    })
-                end
+                pcall(function()
+                    local rs = game:GetService("ReplicatedStorage")
+                    local remote = rs:FindFirstChild("RedeemCode", true) or rs:FindFirstChild("Events", true):FindFirstChild("RedeemCode")
+                    if remote then
+                        remote:FireServer(code)
+                    end
+                end)
                 task.wait(0.5)
             end
+            Fluent:Notify({Title = "onzeHub", Content = "Proceso de códigos finalizado.", Duration = 3})
         end
     })
 
@@ -139,26 +149,26 @@ function Module.Load(Tabs, Window, Fluent, Options)
     Tabs.Specific:AddSection("Visuales")
     
     Tabs.Specific:AddToggle("DragonESP", {
-        Title = "ESP de Jugadores y Mobs",
+        Title = "ESP Enemigo (Rojo)",
         Default = false,
         Callback = function(Value)
             _G.DragonESP = Value
+            if Value then
+                Fluent:Notify({Title = "onzeHub", Content = "ESP ACTIVADO.", Duration = 2})
+            end
             task.spawn(function()
                 while _G.DragonESP do
-                    -- ESP para Jugadores
                     for _, p in pairs(game.Players:GetPlayers()) do
                         if p ~= game.Players.LocalPlayer and p.Character then
                             local h = p.Character:FindFirstChild("onzeHub_ESP") or Instance.new("Highlight")
                             h.Name = "onzeHub_ESP"
                             h.Parent = p.Character
-                            h.FillColor = Color3.fromRGB(0, 255, 255)
-                            h.OutlineColor = Color3.fromRGB(255, 255, 255)
+                            h.FillColor = Color3.fromRGB(255, 0, 0)
                             h.Enabled = true
                         end
                     end
                     task.wait(2)
                 end
-                -- Limpieza
                 for _, p in pairs(game.Players:GetPlayers()) do
                     if p.Character and p.Character:FindFirstChild("onzeHub_ESP") then
                         p.Character.onzeHub_ESP:Destroy()
@@ -170,7 +180,7 @@ function Module.Load(Tabs, Window, Fluent, Options)
 
     -- Mantener Velocidad al reaparecer
     game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
-        task.wait(1)
+        task.wait(1.5)
         local hum = char:WaitForChild("Humanoid")
         hum.WalkSpeed = _G.DragonSpeed
     end)
