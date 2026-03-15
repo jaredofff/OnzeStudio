@@ -12,14 +12,16 @@ function Module.Load(Tabs, Window, Fluent, Options)
     _G.AutoCollect = false
     _G.FastAttack = false
 
-    -- Función para encontrar enemigos de forma más robusta
+    -- Función para encontrar enemigos optimizada
     local function GetEnemies()
         local enemies = {}
-        -- Buscar en todo el workspace para encontrar carpetas de mobs
-        for _, v in pairs(workspace:GetDescendants()) do
+        local char = game.Players.LocalPlayer.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return enemies end
+        
+        -- Escaneo más ligero: Solo hijos directos del workspace o modelos con Humanoid
+        for _, v in pairs(workspace:GetChildren()) do
             if v:IsA("Model") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                -- No atacarse a uno mismo ni a otros jugadores si es posible
-                if not game.Players:GetPlayerFromCharacter(v) and v ~= game.Players.LocalPlayer.Character then
+                if v ~= char and not game.Players:GetPlayerFromCharacter(v) then
                     table.insert(enemies, v)
                 end
             end

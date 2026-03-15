@@ -8,6 +8,14 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
+-- [[ LIMPIEZA PREVIA (ANTI-GHOST) ]]
+-- Esto borra interfaces viejas si reinicias el script sin cerrar el juego
+for _, v in pairs(game.CoreGui:GetChildren()) do
+    if v.Name == "Fluent" or v.Name == "onzeHub" then
+        v:Destroy()
+    end
+end
+
 -- [[ SISTEMA ANTI-DETECCIÓN AVANZADO ]]
 local function Protect(instance)
     pcall(function()
@@ -22,7 +30,6 @@ local function Protect(instance)
     end)
 end
 
--- Compatibilidad: Solo activar spoofing si el ejecutor lo soporta
 if getrawmetatable and setreadonly and newcclosure then
     local RawMetatable = getrawmetatable(game)
     local OldIndex = RawMetatable.__index
@@ -30,34 +37,35 @@ if getrawmetatable and setreadonly and newcclosure then
     
     setreadonly(RawMetatable, false)
 
+    -- Spoofing avanzado: Evita que el juego detecte que tu WalkSpeed es mayor a 16
     RawMetatable.__index = newcclosure(function(Self, Key)
-        if not checkcaller() then
-            if (Key == "WalkSpeed" or Key == "JumpPower" or Key == "JumpHeight") and Self:IsA("Humanoid") then
-                if Key == "WalkSpeed" then return 16 end
-                if Key == "JumpPower" then return 50 end
-                if Key == "JumpHeight" then return 7.2 end
-            end
-            if Key == "Name" and (Self == game.Players.LocalPlayer or Self == game.Players.LocalPlayer.Character) then
-                return "Player"
-            end
+        if not checkcaller() and Self:IsA("Humanoid") then
+            if Key == "WalkSpeed" then return 16 end
+            if Key == "JumpPower" then return 50 end
         end
         return OldIndex(Self, Key)
     end)
 
     RawMetatable.__namecall = newcclosure(function(Self, ...)
         local Method = getnamecallmethod()
-        local Args = {...}
         if not checkcaller() and Method == "Kick" then
-            warn("onzeHub: Intento de KICK bloqueado!")
             return nil
         end
-        return OldNamecall(Self, unpack(Args))
+        return OldNamecall(Self, ...)
     end)
 
     setreadonly(RawMetatable, true)
 else
-    warn("onzeHub: Tu ejecutor no soporta protección de Metatablas. Cargando modo básico...")
+    warn("onzeHub: Spoofing básico activado.")
 end
+
+-- [[ OPTIMIZADOR DE MEMORIA (GC) ]]
+task.spawn(function()
+    while task.wait(60) do
+        -- Forzar recolección de basura para evitar lag acumulado
+        collectgarbage("collect")
+    end
+end)
 
 local Window = Fluent:CreateWindow({
     Title = "onzeHub",
@@ -75,11 +83,9 @@ local Tabs = {}
 local HubLoaded = false -- Control de duplicación
 
 local function InitHub()
-    -- [[ DETECCIÓN DE JUEGOS ]]
     local GameID = game.PlaceId
     local MarketplaceService = game:GetService("MarketplaceService")
-    local GameInfo = {}
-
+    local GameInfo = { Name = "Universal" }
     pcall(function()
         GameInfo = MarketplaceService:GetProductInfo(GameID)
     end)
@@ -87,42 +93,24 @@ local function InitHub()
     local GameSupport = {
         [492414410] = "Brookhaven",
         [13772394625] = "Blade Ball",
-        [2753915549] = "Blox Fruits",
-        [129907317028750] = "Be Dino",
         [101878803733802] = "Overkill",
         [70390793715007] = "Hooked!",
         [75663528075786] = "How to Train Your Dragon"
     }
 
-    -- Detección por ID o por nombre del producto
     local CurrentGameName = GameSupport[GameID]
-    local function CheckName(name, target)
-        return name and string.find(string.lower(name), string.lower(target))
-    end
+    local function CheckName(name, target) return name and string.find(string.lower(name), string.lower(target)) end
 
-    if not CurrentGameName and CheckName(GameInfo.Name, "Brookhaven") then
-        CurrentGameName = "Brookhaven"
-        GameID = 492414410
-    elseif not CurrentGameName and CheckName(GameInfo.Name, "Blade Ball") then
-        CurrentGameName = "Blade Ball"
-        GameID = 13772394625
-    elseif not CurrentGameName and CheckName(GameInfo.Name, "Overkill") then
-        CurrentGameName = "Overkill"
-        GameID = 101878803733802
-    elseif not CurrentGameName and CheckName(GameInfo.Name, "Hooked") then
-        CurrentGameName = "Hooked!"
-        GameID = 70390793715007
-    elseif not CurrentGameName and CheckName(GameInfo.Name, "dragon") then
+    if not CurrentGameName and CheckName(GameInfo.Name, "dragon") then
         CurrentGameName = "How to Train Your Dragon"
         GameID = 75663528075786
     end
 
     CurrentGameName = CurrentGameName or "Universal"
 
-    -- Cargar Pestañas Reales
+    -- Crear Pestañas Reales
     Tabs.Main = Window:AddTab({ Title = "Inicio", Icon = "home" })
     Tabs.Universal = Window:AddTab({ Title = "Universal", Icon = "globe" })
-    Tabs.Games = Window:AddTab({ Title = "Juegos", Icon = "layout-grid" })
     
     if CurrentGameName ~= "Universal" then
         Tabs.Specific = Window:AddTab({ Title = CurrentGameName, Icon = "zap" })
@@ -130,132 +118,68 @@ local function InitHub()
     
     Tabs.Settings = Window:AddTab({ Title = "Ajustes", Icon = "settings" })
 
-    local Options = Fluent.Options
-
-    -- [[ PESTAÑA INICIO ]] 
+    -- Lógica de inicio
     Tabs.Main:AddParagraph({
-        Title = "¡Bienvenido a onzeHub!",
-        Content = string.format("Usuario: %s\nID Usuario: %d\nID Juego: %d\nNombre: %s", 
-            game.Players.LocalPlayer.Name, 
-            game.Players.LocalPlayer.UserId, 
-            game.PlaceId, 
-            GameInfo.Name or "No detectado"
-        )
-    })
-    Fluent:Notify({
-        Title = "onzeHub",
-        Content = "Bienvenido de nuevo, " .. game.Players.LocalPlayer.Name,
-        Duration = 5
+        Title = "onzeHub: Premium",
+        Content = "Usuario: " .. game.Players.LocalPlayer.Name .. "\nJuego: " .. (GameInfo.Name or "Universal")
     })
 
-    -- [[ CARGA DE MÓDULOS ESPECÍFICOS ]]
-    local function LoadModule(TargetID, Name)
-        local ModuleURL = "https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. TargetID .. ".lua?t=" .. os.time()
-        local Success, GameModuleFunc = pcall(function()
-            return loadstring(game:HttpGet(ModuleURL))()
-        end)
-
-        if Success and GameModuleFunc and type(GameModuleFunc.Load) == "function" then
-            pcall(function()
-                GameModuleFunc.Load(Tabs, Window, Fluent, Options)
-            end)
-            Fluent:Notify({Title = "onzeHub", Content = "Módulo [" .. Name .. "] cargado.", Duration = 3})
+    -- Función de carga
+    local function LoadModule(id, name)
+        local url = "https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. id .. ".lua?t=" .. os.time()
+        local success, mod = pcall(function() return loadstring(game:HttpGet(url))() end)
+        if success and mod then
+            pcall(function() mod.Load(Tabs, Window, Fluent, Fluent.Options) end)
+            Fluent:Notify({Title = "onzeHub", Content = name .. " cargado.", Duration = 3})
         end
     end
 
-    if Tabs.Specific then
-        LoadModule(GameID, CurrentGameName)
-    end
-
-    -- Botones de carga manual
-    Tabs.Main:AddSection("Atajos de Juegos")
-    Tabs.Main:AddButton({
-        Title = "Forzar: Brookhaven",
-        Callback = function() LoadModule(492414410, "Brookhaven") end
-    })
-    Tabs.Main:AddButton({
-        Title = "Forzar: Overkill",
-        Callback = function() LoadModule(101878803733802, "Overkill") end
-    })
-    Tabs.Main:AddButton({
-        Title = "Forzar: Dragon",
-        Callback = function() LoadModule(75663528075786, "How to Train Your Dragon") end
-    })
+    if Tabs.Specific then LoadModule(GameID, CurrentGameName) end
 
     -- Universal
-    Tabs.Universal:AddSlider("WalkSpeed", {
-        Title = "Velocidad", 
-        Default = 16, 
-        Min = 16, 
-        Max = 250, 
-        Rounding = 1, 
-        Callback = function(V) 
-            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = V 
+    Tabs.Universal:AddSlider("WalkSpeed", {Title = "Velocidad", Default = 16, Min = 16, Max = 300, Rounding = 1, Callback = function(v) pcall(function() game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end) end})
+
+    -- [[ CARGA DE ICONOS Y TEMAS OPTIMIZADA ]]
+    pcall(function()
+        InterfaceManager:SetLibrary(Fluent)
+        InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+        SaveManager:SetLibrary(Fluent)
+        SaveManager:BuildConfigSection(Tabs.Settings)
+    end)
+
+    Window:SelectTab(2) -- Saltar a Inicio
+
+    -- [[ SISTEMA DE CACHÉ DE PERSONAJE ]]
+    local LocalPlayer = game.Players.LocalPlayer
+    LocalPlayer.CharacterAdded:Connect(function(Character)
+        local Hum = Character:WaitForChild("Humanoid", 10)
+        if Hum then
+            task.wait(1)
+            -- Aplicar ajustes guardados al reaparecer
+            if Fluent.Options.WalkSpeed then 
+                Hum.WalkSpeed = Fluent.Options.WalkSpeed.Value
+            end
         end
-    })
-    
-    -- Ajustes y Finalización
-    InterfaceManager:SetLibrary(Fluent)
-    InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-    SaveManager:SetLibrary(Fluent)
-    SaveManager:BuildConfigSection(Tabs.Settings)
-    
-    Window:SelectTab(2) -- Ir a Inicio automáticamente
+    end)
 end
 
-LoginTab:AddSection("Verificación de Licencia")
-
+-- Pestaña Login (Única activa al inicio)
+LoginTab:AddSection("Seguridad")
 local MyKey = ""
-LoginTab:AddInput("KeyInput", {
-    Title = "Introduce tu Key",
-    Description = "Consigue una Key en nuestro Discord",
-    Default = "",
-    Placeholder = "Escribe la Key aquí...",
-    Callback = function(Value)
-        MyKey = Value
-    end
-})
+LoginTab:AddInput("Key", {Title = "Key", Callback = function(v) MyKey = v end})
 
 LoginTab:AddButton({
-    Title = "Verificar Key",
-    Description = "Valida tu suscripción",
+    Title = "Entrar",
     Callback = function()
-        -- NOTA: Esto es una validación local. Para venta real, se conecta a una API.
         if MyKey == "ONZE-2026" then
             if HubLoaded then return end
             HubLoaded = true
-            
-            Fluent:Notify({
-                Title = "Acceso Concedido",
-                Content = "Cargando módulos de onzeHub...",
-                Duration = 3
-            })
-            
             InitHub()
-            
-            -- ELIMINAR LA PESTAÑA DE ACCESO PARA SIEMPRE
-            pcall(function()
-                LoginTab:Destroy()
-            end)
+            -- Ocultar pestaña login en lugar de destruir (más estable)
+            LoginTab:AddParagraph({Title = "Estatus", Content = "✅ Autenticado"})
         else
-            Fluent:Notify({
-                Title = "Error de Acceso",
-                Content = "La Key introducida es incorrecta o ha expirado.",
-                Duration = 4
-            })
+            Fluent:Notify({Title = "Error", Content = "Key inválida", Duration = 3})
         end
-    end
-})
-
-LoginTab:AddButton({
-    Title = "Obtener Key gratis",
-    Callback = function()
-        setclipboard("https://discord.gg/onzehub") -- Link de ejemplo
-        Fluent:Notify({
-            Title = "Enlace Copiado",
-            Content = "Se ha copiado el link del Discord al portapapeles.",
-            Duration = 3
-        })
     end
 })
 
