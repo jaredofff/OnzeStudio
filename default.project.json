@@ -1,0 +1,11 @@
+{
+  "name": "QuantumHub",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "QuantumHub": {
+        "$path": "src"
+      }
+    }
+  }
+}

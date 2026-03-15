@@ -1,0 +1,6 @@
+.antigravity/
+.gemini/
+extensions_list.txt
+*.log
+.luarc.json
+selene.toml
