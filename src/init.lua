@@ -8,19 +8,50 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
--- [[ SISTEMA ANTI-DETECCIÓN (SPOOFING) ]]
+-- [[ SISTEMA ANTI-DETECCIÓN AVANZADO ]]
+local function Protect(instance)
+    if gethui then
+        instance.Parent = gethui()
+    elseif syn and syn.protect_gui then
+        syn.protect_gui(instance)
+        instance.Parent = game:GetService("CoreGui")
+    else
+        instance.Parent = game:GetService("CoreGui")
+    end
+end
+
 local RawMetatable = getrawmetatable(game)
 local OldIndex = RawMetatable.__index
 local OldNewIndex = RawMetatable.__newindex
+local OldNamecall = RawMetatable.__namecall
 setreadonly(RawMetatable, false)
 
 RawMetatable.__index = newcclosure(function(Self, Key)
-    if not checkcaller() and (Key == "WalkSpeed" or Key == "JumpPower" or Key == "JumpHeight") and Self:IsA("Humanoid") then
-        if Key == "WalkSpeed" then return 16 end
-        if Key == "JumpPower" then return 50 end
-        if Key == "JumpHeight" then return 7.2 end
+    if not checkcaller() then
+        -- Spoofing de Humanoide
+        if (Key == "WalkSpeed" or Key == "JumpPower" or Key == "JumpHeight") and Self:IsA("Humanoid") then
+            if Key == "WalkSpeed" then return 16 end
+            if Key == "JumpPower" then return 50 end
+            if Key == "JumpHeight" then return 7.2 end
+        end
+        -- Spoofing de Nombre e ID (para evitar logs)
+        if Key == "Name" and (Self == game.Players.LocalPlayer or Self == game.Players.LocalPlayer.Character) then
+            return "Player"
+        end
     end
     return OldIndex(Self, Key)
+end)
+
+RawMetatable.__namecall = newcclosure(function(Self, ...)
+    local Method = getnamecallmethod()
+    local Args = {...}
+    
+    if not checkcaller() and Method == "Kick" then
+        warn("onzeHub: Intento de KICK bloqueado!")
+        return nil
+    end
+    
+    return OldNamecall(Self, unpack(Args))
 end)
 
 setreadonly(RawMetatable, true)
@@ -30,10 +61,13 @@ local Window = Fluent:CreateWindow({
     SubTitle = "Premium Edition",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
-    Acrylic = true, -- Efecto de desenfoque (blur)
+    Acrylic = true,
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.RightControl
 })
+
+-- Proteger la interfaz
+Protect(game:GetService("CoreGui"):FindFirstChild("Fluent") or game:GetService("CoreGui"):FindFirstChild("ScreenGui"))
 
 -- Iconos: https://lucide.dev/icons
 local Tabs = {
