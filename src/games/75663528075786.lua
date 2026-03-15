@@ -111,7 +111,12 @@ function Module.Load(Tabs, Window, Fluent, Options)
         Title = "Canjear Todos los Códigos META",
         Description = "Canjea automáticamente códigos de Trait Rerolls y Huevos",
         Callback = function()
-            local codes = {"ONAROLL", "THANKYOU20K", "MORETRAITS", "SKRILLISSUE", "ABCDEF", "SORRY4DELAY", "EGGCELENT"}
+            local codes = {
+                "DRAGONS", "ONAROLL", "COOKING", "THANKYOU20K", "SNOGGLETOG", 
+                "YAKNOG", "FLORAL", "SKRILLISSUE", "GEMS", "MORETRAITS", 
+                "ITTAKESTWO", "PEACOCKEGG", "USEYURHEAD", "DRAGONS4L", 
+                "ABCDEF", "EGGCELENT", "RISKYR", "SORRY4DELAY"
+            }
             local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Events", true) and game:GetService("ReplicatedStorage"):FindFirstChild("Events", true):FindFirstChild("RedeemCode")
             
             for _, code in pairs(codes) do
