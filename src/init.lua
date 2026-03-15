@@ -62,7 +62,7 @@ end
 -- [[ OPTIMIZADOR DE MEMORIA (GC) ]]
 task.spawn(function()
     while task.wait(60) do
-        -- Forzar recolección de basura para evitar lag acumulado
+        local _ = collectgarbage("count")
         collectgarbage("collect")
     end
 end)
@@ -111,6 +111,7 @@ local function InitHub()
     -- Crear Pestañas Reales
     Tabs.Main = Window:AddTab({ Title = "Inicio", Icon = "home" })
     Tabs.Universal = Window:AddTab({ Title = "Universal", Icon = "globe" })
+    Tabs.Games = Window:AddTab({ Title = "Juegos", Icon = "layout-grid" })
     
     if CurrentGameName ~= "Universal" then
         Tabs.Specific = Window:AddTab({ Title = CurrentGameName, Icon = "zap" })
@@ -127,17 +128,54 @@ local function InitHub()
     -- Función de carga
     local function LoadModule(id, name)
         local url = "https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. id .. ".lua?t=" .. os.time()
-        local success, mod = pcall(function() return loadstring(game:HttpGet(url))() end)
+        local success, mod = pcall(function() 
+            return loadstring(game:HttpGet(url))() 
+        end)
+        
         if success and mod then
-            pcall(function() mod.Load(Tabs, Window, Fluent, Fluent.Options) end)
+            pcall(function() 
+                mod.Load(Tabs, Window, Fluent, Fluent.Options) 
+            end)
             Fluent:Notify({Title = "onzeHub", Content = name .. " cargado.", Duration = 3})
         end
     end
 
     if Tabs.Specific then LoadModule(GameID, CurrentGameName) end
 
-    -- Universal
-    Tabs.Universal:AddSlider("WalkSpeed", {Title = "Velocidad", Default = 16, Min = 16, Max = 300, Rounding = 1, Callback = function(v) pcall(function() game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end) end})
+    -- [[ PESTAÑA JUEGOS (MANUAL) ]]
+    Tabs.Games:AddSection("Soportados Oficialmente")
+    Tabs.Games:AddButton({Title = "Cargar: Brookhaven", Callback = function() LoadModule(492414410, "Brookhaven") end})
+    Tabs.Games:AddButton({Title = "Cargar: Dragon Master", Callback = function() LoadModule(75663528075786, "Dragon Master") end})
+    Tabs.Games:AddButton({Title = "Cargar: Overkill", Callback = function() LoadModule(101878803733802, "Overkill") end})
+
+    -- [[ UNIVERSAL ]]
+    Tabs.Universal:AddSlider("WalkSpeed", {
+        Title = "Velocidad", 
+        Default = 16, 
+        Min = 16, 
+        Max = 300, 
+        Rounding = 1, 
+        Callback = function(v) 
+            pcall(function() 
+                game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v 
+            end) 
+        end
+    })
+    Tabs.Universal:AddToggle("UniversalESP", {Title = "ESP Jugadores (Básico)", Default = false, Callback = function(v)
+        _G.UniversalESP = v
+        while _G.UniversalESP do
+            for _, player in pairs(game.Players:GetPlayers()) do
+                if player ~= game.Players.LocalPlayer and player.Character then
+                    if not player.Character:FindFirstChild("onze_esp") then
+                        local h = Instance.new("Highlight", player.Character)
+                        h.Name = "onze_esp"
+                        h.FillColor = Color3.fromRGB(255, 255, 255)
+                    end
+                end
+            end
+            task.wait(2)
+        end
+    end})
 
     -- [[ CARGA DE ICONOS Y TEMAS OPTIMIZADA ]]
     pcall(function()
@@ -175,8 +213,14 @@ LoginTab:AddButton({
             if HubLoaded then return end
             HubLoaded = true
             InitHub()
-            -- Ocultar pestaña login en lugar de destruir (más estable)
-            LoginTab:AddParagraph({Title = "Estatus", Content = "✅ Autenticado"})
+            
+            -- ELIMINAR ACCESO (Solución definitiva al duplicado y corrupción)
+            task.spawn(function()
+                pcall(function()
+                    LoginTab:Destroy() -- Destruye el objeto de la lista de tabs
+                end)
+                Window:SelectTab(2) -- Asegurar cambio a Inicio
+            end)
         else
             Fluent:Notify({Title = "Error", Content = "Key inválida", Duration = 3})
         end
