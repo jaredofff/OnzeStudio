@@ -9,52 +9,56 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 -- [[ SISTEMA ANTI-DETECCIÓN AVANZADO ]]
+-- [[ SISTEMA ANTI-DETECCIÓN AVANZADO ]]
 local function Protect(instance)
-    if gethui then
-        instance.Parent = gethui()
-    elseif syn and syn.protect_gui then
-        syn.protect_gui(instance)
-        instance.Parent = game:GetService("CoreGui")
-    else
-        instance.Parent = game:GetService("CoreGui")
-    end
+    pcall(function()
+        if gethui then
+            instance.Parent = gethui()
+        elseif syn and syn.protect_gui then
+            syn.protect_gui(instance)
+            instance.Parent = game:GetService("CoreGui")
+        else
+            instance.Parent = game:GetService("CoreGui")
+        end
+    end)
 end
 
-local RawMetatable = getrawmetatable(game)
-local OldIndex = RawMetatable.__index
-local OldNewIndex = RawMetatable.__newindex
-local OldNamecall = RawMetatable.__namecall
-setreadonly(RawMetatable, false)
-
-RawMetatable.__index = newcclosure(function(Self, Key)
-    if not checkcaller() then
-        -- Spoofing de Humanoide
-        if (Key == "WalkSpeed" or Key == "JumpPower" or Key == "JumpHeight") and Self:IsA("Humanoid") then
-            if Key == "WalkSpeed" then return 16 end
-            if Key == "JumpPower" then return 50 end
-            if Key == "JumpHeight" then return 7.2 end
-        end
-        -- Spoofing de Nombre e ID (para evitar logs)
-        if Key == "Name" and (Self == game.Players.LocalPlayer or Self == game.Players.LocalPlayer.Character) then
-            return "Player"
-        end
-    end
-    return OldIndex(Self, Key)
-end)
-
-RawMetatable.__namecall = newcclosure(function(Self, ...)
-    local Method = getnamecallmethod()
-    local Args = {...}
+-- Compatibilidad: Solo activar spoofing si el ejecutor lo soporta
+if getrawmetatable and setreadonly and newcclosure then
+    local RawMetatable = getrawmetatable(game)
+    local OldIndex = RawMetatable.__index
+    local OldNamecall = RawMetatable.__namecall
     
-    if not checkcaller() and Method == "Kick" then
-        warn("onzeHub: Intento de KICK bloqueado!")
-        return nil
-    end
-    
-    return OldNamecall(Self, unpack(Args))
-end)
+    setreadonly(RawMetatable, false)
 
-setreadonly(RawMetatable, true)
+    RawMetatable.__index = newcclosure(function(Self, Key)
+        if not checkcaller() then
+            if (Key == "WalkSpeed" or Key == "JumpPower" or Key == "JumpHeight") and Self:IsA("Humanoid") then
+                if Key == "WalkSpeed" then return 16 end
+                if Key == "JumpPower" then return 50 end
+                if Key == "JumpHeight" then return 7.2 end
+            end
+            if Key == "Name" and (Self == game.Players.LocalPlayer or Self == game.Players.LocalPlayer.Character) then
+                return "Player"
+            end
+        end
+        return OldIndex(Self, Key)
+    end)
+
+    RawMetatable.__namecall = newcclosure(function(Self, ...)
+        local Method = getnamecallmethod()
+        local Args = {...}
+        if not checkcaller() and Method == "Kick" then
+            warn("onzeHub: Intento de KICK bloqueado!")
+            return nil
+        end
+        return OldNamecall(Self, unpack(Args))
+    end)
+
+    setreadonly(RawMetatable, true)
+else
+    warn("onzeHub: Tu ejecutor no soporta protección de Metatablas. Cargando modo básico...")
+end
 
 local Window = Fluent:CreateWindow({
     Title = "onzeHub",
