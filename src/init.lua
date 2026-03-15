@@ -92,7 +92,8 @@ end)
 local GameSupport = {
     [492414410] = "Brookhaven",
     [13772394625] = "Blade Ball",
-    [2753915549] = "Blox Fruits"
+    [2753915549] = "Blox Fruits",
+    [129907317028750] = "Be Dino"
 }
 
 -- Detección por ID o por nombre del producto
