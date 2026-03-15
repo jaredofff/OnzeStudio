@@ -95,7 +95,8 @@ local GameSupport = {
     [2753915549] = "Blox Fruits",
     [129907317028750] = "Be Dino",
     [101878803733802] = "Overkill",
-    [70390793715007] = "Hooked!"
+    [70390793715007] = "Hooked!",
+    [75663528075786] = "How to Train Your Dragon"
 }
 
 -- Detección por ID o por nombre del producto
@@ -116,6 +117,9 @@ elseif not CurrentGameName and CheckName(GameInfo.Name, "Overkill") then
 elseif not CurrentGameName and CheckName(GameInfo.Name, "Hooked") then
     CurrentGameName = "Hooked!"
     GameID = 70390793715007
+elseif not CurrentGameName and CheckName(GameInfo.Name, "dragon") then
+    CurrentGameName = "How to Train Your Dragon"
+    GameID = 75663528075786
 end
 
 CurrentGameName = CurrentGameName or "Universal"
@@ -200,6 +204,16 @@ Tabs.Main:AddButton({
             Tabs.Specific = Window:AddTab({ Title = "Hooked!", Icon = "zap" })
         end
         LoadModule(70390793715007, "Hooked!")
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "Forzar Carga: Dragon",
+    Callback = function()
+        if not Tabs.Specific then
+            Tabs.Specific = Window:AddTab({ Title = "How to Train Your Dragon", Icon = "zap" })
+        end
+        LoadModule(75663528075786, "How to Train Your Dragon")
     end
 })
 
