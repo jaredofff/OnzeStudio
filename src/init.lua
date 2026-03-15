@@ -122,18 +122,26 @@ Tabs.Main:AddButton({
 
 -- [[ PESTAÑA DE JUEGO ESPECÍFICO ]]
 if Tabs.Specific then
-    local Success, GameModule = pcall(function()
-        return loadstring(game:HttpGet("https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. GameID .. ".lua"))()
+    local ModuleURL = "https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. GameID .. ".lua?t=" .. os.time()
+    
+    local Success, GameModuleFunc = pcall(function()
+        return loadstring(game:HttpGet(ModuleURL))
     end)
 
-    if Success and GameModule and GameModule.Load then
-        GameModule.Load(Tabs, Window, Fluent, Options)
+    if Success and type(GameModuleFunc) == "function" then
+        local RunSuccess, GameModule = pcall(GameModuleFunc)
+        if RunSuccess and GameModule and GameModule.Load then
+            GameModule.Load(Tabs, Window, Fluent, Options)
+            print("onzeHub: Módulo de juego cargado con éxito.")
+        else
+            warn("onzeHub: Error al ejecutar el módulo: " .. tostring(GameModule))
+        end
     else
         Tabs.Specific:AddParagraph({
             Title = "Aviso",
-            Content = "No se pudieron cargar las funciones específicas para este juego o el módulo aún no existe."
+            Content = "No se pudieron cargar las funciones para este juego. Verifica tu conexión o la consola (F9)."
         })
-        warn("onzeHub: No se pudo cargar el módulo para el ID " .. GameID)
+        warn("onzeHub: No se pudo descargar el módulo desde: " .. ModuleURL)
     end
 end
 
