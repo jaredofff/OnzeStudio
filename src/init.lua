@@ -94,20 +94,24 @@ local GameSupport = {
     [13772394625] = "Blade Ball",
     [2753915549] = "Blox Fruits",
     [129907317028750] = "Be Dino",
-    [74996816424339] = "Overkill"
+    [101878803733802] = "Overkill"
 }
 
 -- Detección por ID o por nombre del producto
 local CurrentGameName = GameSupport[GameID]
-if not CurrentGameName and GameInfo.Name and string.find(GameInfo.Name, "Brookhaven") then
+local function CheckName(name, target)
+    return name and string.find(string.lower(name), string.lower(target))
+end
+
+if not CurrentGameName and CheckName(GameInfo.Name, "Brookhaven") then
     CurrentGameName = "Brookhaven"
     GameID = 492414410
-elseif not CurrentGameName and GameInfo.Name and string.find(GameInfo.Name, "Blade Ball") then
+elseif not CurrentGameName and CheckName(GameInfo.Name, "Blade Ball") then
     CurrentGameName = "Blade Ball"
     GameID = 13772394625
-elseif not CurrentGameName and GameInfo.Name and string.find(GameInfo.Name, "Overkill") then
+elseif not CurrentGameName and CheckName(GameInfo.Name, "Overkill") then
     CurrentGameName = "Overkill"
-    GameID = 74996816424339
+    GameID = 101878803733802
 end
 
 CurrentGameName = CurrentGameName or "Universal"
