@@ -9,10 +9,9 @@ local function LoadScript()
     
     warn("onzeHub: Cargando componentes...")
     
-    -- Por ahora, cargamos el código base directamente para que veas cómo funciona
-    -- NOTA: En un exploit real, podrías usar readfile() para probar localmente
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-    print("Sistema listo. Edita src/init.lua para personalizar tu Hub.")
+    -- Versión en la nube de onzeHub
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/init.lua"))()
+    print("onzeHub: Sistema cargado desde GitHub correctamente.")
 end
 
 local success, err = pcall(LoadScript)

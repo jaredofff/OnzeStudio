@@ -9,11 +9,11 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "onzeHub | " .. game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name,
-    SubTitle = "by Antigravity & User",
+    Title = "onzeHub",
+    SubTitle = "Premium Edition",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
+    Acrylic = true, -- Efecto de desenfoque (blur)
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.RightControl
 })
@@ -143,7 +143,29 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function(Character)
     end
 end)
 
--- [[ PESTAÑA AJUSTES ]]
+-- [[ PESTAÑA AJUSTES (PERSONALIZACIÓN) ]]
+Tabs.Settings:AddSection("Apariencia")
+
+Tabs.Settings:AddDropdown("ThemeDropdown", {
+    Title = "Tema Visual",
+    Values = {"Dark", "Light", "Rose", "Aqua", "Amethyst"},
+    Multi = false,
+    Default = 1,
+    Callback = function(Value)
+        Fluent:SetTheme(Value)
+    end
+})
+
+Tabs.Settings:AddToggle("AcrylicToggle", {
+    Title = "Efecto Acrílico (Transparencia)",
+    Default = true,
+    Callback = function(Value)
+        Window:SetAcrylic(Value)
+    end
+})
+
+Tabs.Settings:AddSection("Sistema")
+
 InterfaceManager:SetLibrary(Fluent)
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:SetLibrary(Fluent)
