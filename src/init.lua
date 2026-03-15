@@ -122,7 +122,12 @@ local function InitHub()
     -- Lógica de inicio
     Tabs.Main:AddParagraph({
         Title = "onzeHub: Premium",
-        Content = "Usuario: " .. game.Players.LocalPlayer.Name .. "\nJuego: " .. (GameInfo.Name or "Universal")
+        Content = string.format("Acceso concedido para: %s\nID Usuario: %d\nID Juego: %d\nNombre Juego: %s", 
+            game.Players.LocalPlayer.Name, 
+            game.Players.LocalPlayer.UserId, 
+            game.PlaceId, 
+            GameInfo.Name or "Universal"
+        )
     })
 
     -- Función de carga
