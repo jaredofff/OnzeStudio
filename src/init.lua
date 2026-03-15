@@ -193,6 +193,16 @@ Tabs.Main:AddButton({
     end
 })
 
+Tabs.Main:AddButton({
+    Title = "Forzar Carga: Hooked!",
+    Callback = function()
+        if not Tabs.Specific then
+            Tabs.Specific = Window:AddTab({ Title = "Hooked!", Icon = "zap" })
+        end
+        LoadModule(70390793715007, "Hooked!")
+    end
+})
+
 -- [[ PESTAÑA JUEGOS (LISTA GENERAL) ]]
 Tabs.Games:AddSection("Juegos Soportados")
 for id, name in pairs(GameSupport) do
