@@ -221,14 +221,15 @@ Tabs.Universal:AddToggle("InfiniteJump", {
 
 -- [[ ACTUALIZACIÓN AUTOMÁTICA DE PERSONAJE ]]
 game.Players.LocalPlayer.CharacterAdded:Connect(function(Character)
-    task.wait(1)
-    if Options.WalkSpeed then 
-        Character:WaitForChild("Humanoid").WalkSpeed = Options.WalkSpeed.Value
-    end
-    if Options.JumpHeight then
-        local Hum = Character:WaitForChild("Humanoid")
-        Hum.JumpPower = Options.JumpHeight.Value
-        Hum.UseJumpPower = true
+    local Hum = Character:WaitForChild("Humanoid", 5) or Character:FindFirstChildOfClass("Humanoid")
+    if Hum then
+        if Options.WalkSpeed then 
+            Hum.WalkSpeed = Options.WalkSpeed.Value
+        end
+        if Options.JumpHeight then
+            Hum.JumpPower = Options.JumpHeight.Value
+            Hum.UseJumpPower = true
+        end
     end
 end)
 

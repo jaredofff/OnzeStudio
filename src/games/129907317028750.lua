@@ -16,12 +16,20 @@ function Module.Load(Tabs, Window, Fluent, Options)
             _G.SpeedBoost = Value
             game:GetService("UserInputService").InputBegan:Connect(function(input)
                 if input.KeyCode == Enum.KeyCode.LeftShift and _G.SpeedBoost then
-                    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 60
+                    local Character = game.Players.LocalPlayer.Character
+                    local Hum = Character and Character:FindFirstChildOfClass("Humanoid")
+                    if Hum then
+                        Hum.WalkSpeed = 60
+                    end
                 end
             end)
             game:GetService("UserInputService").InputEnded:Connect(function(input)
                 if input.KeyCode == Enum.KeyCode.LeftShift then
-                    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+                    local Character = game.Players.LocalPlayer.Character
+                    local Hum = Character and Character:FindFirstChildOfClass("Humanoid")
+                    if Hum then
+                        Hum.WalkSpeed = 16
+                    end
                 end
             end)
         end
