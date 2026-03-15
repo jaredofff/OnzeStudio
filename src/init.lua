@@ -8,6 +8,23 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
+-- [[ SISTEMA ANTI-DETECCIÓN (SPOOFING) ]]
+local RawMetatable = getrawmetatable(game)
+local OldIndex = RawMetatable.__index
+local OldNewIndex = RawMetatable.__newindex
+setreadonly(RawMetatable, false)
+
+RawMetatable.__index = newcclosure(function(Self, Key)
+    if not checkcaller() and (Key == "WalkSpeed" or Key == "JumpPower" or Key == "JumpHeight") and Self:IsA("Humanoid") then
+        if Key == "WalkSpeed" then return 16 end
+        if Key == "JumpPower" then return 50 end
+        if Key == "JumpHeight" then return 7.2 end
+    end
+    return OldIndex(Self, Key)
+end)
+
+setreadonly(RawMetatable, true)
+
 local Window = Fluent:CreateWindow({
     Title = "onzeHub",
     SubTitle = "Premium Edition",
