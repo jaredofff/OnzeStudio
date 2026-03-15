@@ -61,7 +61,7 @@ end
 
 local Window = Fluent:CreateWindow({
     Title = "onzeHub",
-    SubTitle = "Premium Edition",
+    SubTitle = "Security System",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
@@ -69,231 +69,193 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.RightControl
 })
 
+-- [[ SISTEMA DE LLAVES (LOGIN) ]]
+local LoginTab = Window:AddTab({ Title = "🔑 Acceso", Icon = "key" })
+local Tabs = {}
+
+local function InitHub()
+    -- [[ DETECCIÓN DE JUEGOS ]]
+    local GameID = game.PlaceId
+    local MarketplaceService = game:GetService("MarketplaceService")
+    local GameInfo = {}
+
+    pcall(function()
+        GameInfo = MarketplaceService:GetProductInfo(GameID)
+    end)
+
+    local GameSupport = {
+        [492414410] = "Brookhaven",
+        [13772394625] = "Blade Ball",
+        [2753915549] = "Blox Fruits",
+        [129907317028750] = "Be Dino",
+        [101878803733802] = "Overkill",
+        [70390793715007] = "Hooked!",
+        [75663528075786] = "How to Train Your Dragon"
+    }
+
+    -- Detección por ID o por nombre del producto
+    local CurrentGameName = GameSupport[GameID]
+    local function CheckName(name, target)
+        return name and string.find(string.lower(name), string.lower(target))
+    end
+
+    if not CurrentGameName and CheckName(GameInfo.Name, "Brookhaven") then
+        CurrentGameName = "Brookhaven"
+        GameID = 492414410
+    elseif not CurrentGameName and CheckName(GameInfo.Name, "Blade Ball") then
+        CurrentGameName = "Blade Ball"
+        GameID = 13772394625
+    elseif not CurrentGameName and CheckName(GameInfo.Name, "Overkill") then
+        CurrentGameName = "Overkill"
+        GameID = 101878803733802
+    elseif not CurrentGameName and CheckName(GameInfo.Name, "Hooked") then
+        CurrentGameName = "Hooked!"
+        GameID = 70390793715007
+    elseif not CurrentGameName and CheckName(GameInfo.Name, "dragon") then
+        CurrentGameName = "How to Train Your Dragon"
+        GameID = 75663528075786
+    end
+
+    CurrentGameName = CurrentGameName or "Universal"
+
+    -- Cargar Pestañas Reales
+    Tabs.Main = Window:AddTab({ Title = "Inicio", Icon = "home" })
+    Tabs.Universal = Window:AddTab({ Title = "Universal", Icon = "globe" })
+    Tabs.Games = Window:AddTab({ Title = "Juegos", Icon = "layout-grid" })
+    
+    if CurrentGameName ~= "Universal" then
+        Tabs.Specific = Window:AddTab({ Title = CurrentGameName, Icon = "zap" })
+    end
+    
+    Tabs.Settings = Window:AddTab({ Title = "Ajustes", Icon = "settings" })
+
+    local Options = Fluent.Options
+
+    -- [[ PESTAÑA INICIO ]] 
+    Tabs.Main:AddParagraph({
+        Title = "¡Bienvenido a onzeHub!",
+        Content = string.format("Usuario: %s\nID Usuario: %d\nID Juego: %d\nNombre: %s", 
+            game.Players.LocalPlayer.Name, 
+            game.Players.LocalPlayer.UserId, 
+            game.PlaceId, 
+            GameInfo.Name or "No detectado"
+        )
+    })
+    Fluent:Notify({
+        Title = "onzeHub",
+        Content = "Bienvenido de nuevo, " .. game.Players.LocalPlayer.Name,
+        Duration = 5
+    })
+
+    -- [[ CARGA DE MÓDULOS ESPECÍFICOS ]]
+    local function LoadModule(TargetID, Name)
+        local ModuleURL = "https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. TargetID .. ".lua?t=" .. os.time()
+        local Success, GameModuleFunc = pcall(function()
+            return loadstring(game:HttpGet(ModuleURL))()
+        end)
+
+        if Success and GameModuleFunc and type(GameModuleFunc.Load) == "function" then
+            pcall(function()
+                GameModuleFunc.Load(Tabs, Window, Fluent, Options)
+            end)
+            Fluent:Notify({Title = "onzeHub", Content = "Módulo [" .. Name .. "] cargado.", Duration = 3})
+        end
+    end
+
+    if Tabs.Specific then
+        LoadModule(GameID, CurrentGameName)
+    end
+
+    -- Botones de carga manual
+    Tabs.Main:AddSection("Atajos de Juegos")
+    Tabs.Main:AddButton({
+        Title = "Forzar: Brookhaven",
+        Callback = function() LoadModule(492414410, "Brookhaven") end
+    })
+    Tabs.Main:AddButton({
+        Title = "Forzar: Overkill",
+        Callback = function() LoadModule(101878803733802, "Overkill") end
+    })
+    Tabs.Main:AddButton({
+        Title = "Forzar: Dragon",
+        Callback = function() LoadModule(75663528075786, "How to Train Your Dragon") end
+    })
+
+    -- Universal
+    Tabs.Universal:AddSlider("WalkSpeed", {
+        Title = "Velocidad", 
+        Default = 16, 
+        Min = 16, 
+        Max = 250, 
+        Rounding = 1, 
+        Callback = function(V) 
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = V 
+        end
+    })
+    
+    -- Ajustes y Finalización
+    InterfaceManager:SetLibrary(Fluent)
+    InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+    SaveManager:SetLibrary(Fluent)
+    SaveManager:BuildConfigSection(Tabs.Settings)
+    
+    Window:SelectTab(2) -- Ir a Inicio automáticamente
+end
+
+LoginTab:AddSection("Verificación de Licencia")
+
+local MyKey = ""
+LoginTab:AddInput("KeyInput", {
+    Title = "Introduce tu Key",
+    Description = "Consigue una Key en nuestro Discord",
+    Default = "",
+    Placeholder = "Escribe la Key aquí...",
+    Callback = function(Value)
+        MyKey = Value
+    end
+})
+
+LoginTab:AddButton({
+    Title = "Verificar Key",
+    Description = "Valida tu suscripción",
+    Callback = function()
+        -- NOTA: Esto es una validación local. Para venta real, se conecta a una API.
+        if MyKey == "ONZE-2026" then
+            Fluent:Notify({
+                Title = "Acceso Concedido",
+                Content = "Cargando módulos de onzeHub...",
+                Duration = 3
+            })
+            InitHub()
+            -- Opcional: Podríamos cerrar la pestaña de login si la UI lo soporta
+        else
+            Fluent:Notify({
+                Title = "Error de Acceso",
+                Content = "La Key introducida es incorrecta o ha expirado.",
+                Duration = 4
+            })
+        end
+    end
+})
+
+LoginTab:AddButton({
+    Title = "Obtener Key gratis",
+    Callback = function()
+        setclipboard("https://discord.gg/onzehub") -- Link de ejemplo
+        Fluent:Notify({
+            Title = "Enlace Copiado",
+            Content = "Se ha copiado el link del Discord al portapapeles.",
+            Duration = 3
+        })
+    end
+})
+
 -- Proteger la interfaz
 Protect(game:GetService("CoreGui"):FindFirstChild("Fluent") or game:GetService("CoreGui"):FindFirstChild("ScreenGui"))
 
 -- Iconos: https://lucide.dev/icons
-local Tabs = {
-    Main = Window:AddTab({ Title = "Inicio", Icon = "home" }),
-    Universal = Window:AddTab({ Title = "Universal", Icon = "globe" }),
-    Games = Window:AddTab({ Title = "Juegos", Icon = "layout-grid" }),
-    Settings = Window:AddTab({ Title = "Ajustes", Icon = "settings" })
-}
+-- The actual Tabs creation is now inside InitHub()
 
--- [[ DETECCIÓN DE JUEGOS ]]
-local GameID = game.PlaceId
-local MarketplaceService = game:GetService("MarketplaceService")
-local GameInfo = {}
-
-pcall(function()
-    GameInfo = MarketplaceService:GetProductInfo(GameID)
-end)
-
-local GameSupport = {
-    [492414410] = "Brookhaven",
-    [13772394625] = "Blade Ball",
-    [2753915549] = "Blox Fruits",
-    [129907317028750] = "Be Dino",
-    [101878803733802] = "Overkill",
-    [70390793715007] = "Hooked!",
-    [75663528075786] = "How to Train Your Dragon"
-}
-
--- Detección por ID o por nombre del producto
-local CurrentGameName = GameSupport[GameID]
-local function CheckName(name, target)
-    return name and string.find(string.lower(name), string.lower(target))
-end
-
-if not CurrentGameName and CheckName(GameInfo.Name, "Brookhaven") then
-    CurrentGameName = "Brookhaven"
-    GameID = 492414410
-elseif not CurrentGameName and CheckName(GameInfo.Name, "Blade Ball") then
-    CurrentGameName = "Blade Ball"
-    GameID = 13772394625
-elseif not CurrentGameName and CheckName(GameInfo.Name, "Overkill") then
-    CurrentGameName = "Overkill"
-    GameID = 101878803733802
-elseif not CurrentGameName and CheckName(GameInfo.Name, "Hooked") then
-    CurrentGameName = "Hooked!"
-    GameID = 70390793715007
-elseif not CurrentGameName and CheckName(GameInfo.Name, "dragon") then
-    CurrentGameName = "How to Train Your Dragon"
-    GameID = 75663528075786
-end
-
-CurrentGameName = CurrentGameName or "Universal"
-
-if CurrentGameName ~= "Universal" then
-    Tabs.Specific = Window:AddTab({ Title = CurrentGameName, Icon = "zap" })
-end
-
-local Options = Fluent.Options
-
--- [[ PESTAÑA INICIO ]] 
-Tabs.Main:AddParagraph({
-    Title = "¡Bienvenido a onzeHub!",
-    Content = string.format("Usuario: %s\nID Usuario: %d\nID Juego: %d\nNombre: %s", 
-        game.Players.LocalPlayer.Name, 
-        game.Players.LocalPlayer.UserId, 
-        game.PlaceId, 
-        GameInfo.Name or "No detectado"
-    )
-})
-
--- [[ CARGA DE MÓDULOS ESPECÍFICOS ]]
-local function LoadModule(TargetID, Name)
-    local ModuleURL = "https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. TargetID .. ".lua?t=" .. os.time()
-    print("onzeHub: Cargando módulo [" .. Name .. "] desde " .. ModuleURL)
-    
-    local Success, GameModuleFunc = pcall(function()
-        return loadstring(game:HttpGet(ModuleURL))()
-    end)
-
-    if Success and GameModuleFunc and type(GameModuleFunc.Load) == "function" then
-        local RunSuccess, Err = pcall(function()
-            GameModuleFunc.Load(Tabs, Window, Fluent, Options)
-        end)
-        
-        if RunSuccess then
-            print("onzeHub: Módulo [" .. Name .. "] cargado correctamente.")
-            Fluent:Notify({Title = "onzeHub", Content = "Módulo [" .. Name .. "] cargado.", Duration = 3})
-        else
-            warn("onzeHub: Error al ejecutar Load(): " .. tostring(Err))
-        end
-    else
-        warn("onzeHub: Error al importar módulo: " .. tostring(GameModuleFunc))
-    end
-end
-
-if Tabs.Specific then
-    LoadModule(GameID, CurrentGameName)
-else
-    Fluent:Notify({
-        Title = "onzeHub",
-        Content = "Modo Universal Cargado (No se detectó juego específico)",
-        Duration = 5
-    })
-end
-
--- Botones de emergencia si no detecta el juego
-Tabs.Main:AddButton({
-    Title = "Forzar Carga: Brookhaven",
-    Callback = function()
-        if not Tabs.Specific then
-            Tabs.Specific = Window:AddTab({ Title = "Brookhaven", Icon = "zap" })
-        end
-        LoadModule(492414410, "Brookhaven")
-    end
-})
-
-Tabs.Main:AddButton({
-    Title = "Forzar Carga: Overkill",
-    Callback = function()
-        if not Tabs.Specific then
-            Tabs.Specific = Window:AddTab({ Title = "Overkill", Icon = "zap" })
-        end
-        LoadModule(101878803733802, "Overkill")
-    end
-})
-
-Tabs.Main:AddButton({
-    Title = "Forzar Carga: Hooked!",
-    Callback = function()
-        if not Tabs.Specific then
-            Tabs.Specific = Window:AddTab({ Title = "Hooked!", Icon = "zap" })
-        end
-        LoadModule(70390793715007, "Hooked!")
-    end
-})
-
-Tabs.Main:AddButton({
-    Title = "Forzar Carga: Dragon",
-    Callback = function()
-        if not Tabs.Specific then
-            Tabs.Specific = Window:AddTab({ Title = "How to Train Your Dragon", Icon = "zap" })
-        end
-        LoadModule(75663528075786, "How to Train Your Dragon")
-    end
-})
-
--- [[ PESTAÑA JUEGOS (LISTA GENERAL) ]]
-Tabs.Games:AddSection("Juegos Soportados")
-for id, name in pairs(GameSupport) do
-    Tabs.Games:AddParagraph({
-        Title = name,
-        Content = "ID: " .. id
-    })
-end
-Tabs.Universal:AddSection("Movimiento")
-
-Tabs.Universal:AddSlider("WalkSpeed", {
-    Title = "Velocidad al caminar",
-    Description = "Ajusta tu velocidad (Default: 16)",
-    Default = 16,
-    Min = 16,
-    Max = 250,
-    Rounding = 1,
-    Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-    end
-})
-
-Tabs.Universal:AddSlider("JumpHeight", {
-    Title = "Altura de Salto",
-    Description = "Ajusta la potencia de salto",
-    Default = 50,
-    Min = 50,
-    Max = 500,
-    Rounding = 1,
-    Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
-        game.Players.LocalPlayer.Character.Humanoid.UseJumpPower = true
-    end
-})
-
-Tabs.Universal:AddToggle("InfiniteJump", {
-    Title = "Salto Infinito",
-    Default = false,
-    Callback = function(Value)
-        _G.InfiniteJump = Value
-        game:GetService("UserInputService").JumpRequest:Connect(function()
-            if _G.InfiniteJump then
-                game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-            end
-        end)
-    end
-})
-
--- [[ ACTUALIZACIÓN AUTOMÁTICA DE PERSONAJE ]]
-game.Players.LocalPlayer.CharacterAdded:Connect(function(Character)
-    local Hum = Character:WaitForChild("Humanoid", 5) or Character:FindFirstChildOfClass("Humanoid")
-    if Hum then
-        if Options.WalkSpeed then 
-            Hum.WalkSpeed = Options.WalkSpeed.Value
-        end
-        if Options.JumpHeight then
-            Hum.JumpPower = Options.JumpHeight.Value
-            Hum.UseJumpPower = true
-        end
-    end
-end)
-
--- [[ PESTAÑA AJUSTES (PERSONALIZACIÓN) ]]
-
-InterfaceManager:SetLibrary(Fluent)
-InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-SaveManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-SaveManager:BuildConfigSection(Tabs.Settings)
-
+-- All core logic is now moved inside InitHub() for security.
 Window:SelectTab(1)
-
-Fluent:Notify({
-    Title = "onzeHub Cargado",
-    Content = "Ejecución exitosa",
-    Duration = 5
-})
-
 SaveManager:LoadAutoloadConfig()

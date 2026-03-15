@@ -170,7 +170,9 @@ function Module.Load(Tabs, Window, Fluent, Options)
                         local lp = game.Players.LocalPlayer
                         -- Forzar barra de stamina al máximo
                         local s = lp.Character:FindFirstChild("Stamina", true) or lp:FindFirstChild("Stamina", true)
-                        if s then s.Value = 100 end
+                        if s then 
+                            s.Value = 100 
+                        end
                         
                         -- En muchos juegos es un NumberValue dentro de un script
                         for _, v in pairs(lp.Character:GetDescendants()) do
@@ -194,7 +196,9 @@ function Module.Load(Tabs, Window, Fluent, Options)
             local rs = game:GetService("ReplicatedStorage")
             local remote = rs:FindFirstChild("RedeemCode", true)
             for _, code in pairs(codes) do
-                if remote then remote:FireServer(code) end
+                if remote then 
+                    remote:FireServer(code) 
+                end
             end
             Fluent:Notify({Title = "onzeHub", Content = "Códigos procesados.", Duration = 2})
         end
@@ -211,8 +215,12 @@ function Module.Load(Tabs, Window, Fluent, Options)
                 while _G.DragonESP do
                     for _, v in pairs(game.Players:GetPlayers()) do
                         if v ~= game.Players.LocalPlayer and v.Character then
-                            local h = v.Character:FindFirstChild("onzeHub_ESP") or Instance.new("Highlight", v.Character)
-                            h.Name = "onzeHub_ESP"
+                            local h = v.Character:FindFirstChild("onzeHub_ESP")
+                            if not h then
+                                h = Instance.new("Highlight")
+                                h.Name = "onzeHub_ESP"
+                                h.Parent = v.Character
+                            end
                             h.FillColor = Color3.fromRGB(255, 0, 50)
                             h.Enabled = true
                         end
