@@ -89,7 +89,9 @@ function Module.Load(Tabs, Window, Fluent, Options)
                         Highlight.Parent = player.Character
                     else
                         local h = player.Character:FindFirstChild("onzeHub_ESP")
-                        if h then h:Destroy() end
+                        if h then 
+                            h:Destroy() 
+                        end
                     end
                 end
             end
