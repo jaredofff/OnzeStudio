@@ -105,6 +105,9 @@ if not CurrentGameName and GameInfo.Name and string.find(GameInfo.Name, "Brookha
 elseif not CurrentGameName and GameInfo.Name and string.find(GameInfo.Name, "Blade Ball") then
     CurrentGameName = "Blade Ball"
     GameID = 13772394625
+elseif not CurrentGameName and GameInfo.Name and string.find(GameInfo.Name, "Overkill") then
+    CurrentGameName = "Overkill"
+    GameID = 74996816424339
 end
 
 CurrentGameName = CurrentGameName or "Universal"
