@@ -68,62 +68,82 @@ function Module.Load(Tabs, Window, Fluent, Options)
 
     Tabs.Specific:AddSection("Visuales")
     
-    Tabs.Specific:AddToggle("Aimbot", {
-        Title = "Aimbot (Mirado Automático)",
-        Description = "Hace que tu cámara mire siempre al enemigo más cercano",
+    Tabs.Specific:AddToggle("SmoothAimbot", {
+        Title = "Aimbot Predictivo (Smooth)",
+        Description = "Calcula hacia dónde se mueve el enemigo para acertar las balas.",
         Default = false,
         Callback = function(Value)
             _G.Aimbot = Value
             task.spawn(function()
                 local Camera = workspace.CurrentCamera
+                local RunService = game:GetService("RunService")
                 while _G.Aimbot do
                     pcall(function()
                         local Target = nil
-                        local MinDist = math.huge
+                        local MinDist = 400 -- FOV Virtual
+                        
                         for _, p in pairs(game.Players:GetPlayers()) do
                             if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
                                 local Pos, OnScreen = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
                                 if OnScreen then
                                     local MousePos = game:GetService("UserInputService"):GetMouseLocation()
-                                    local Dist = (Vector2.new(Pos.X, Pos.Y) - MousePos).Magnitude
-                                    if Dist < MinDist then
-                                        MinDist = Dist
+                                    local ScreenDist = (Vector2.new(Pos.X, Pos.Y) - MousePos).Magnitude
+                                    if ScreenDist < MinDist then
+                                        MinDist = ScreenDist
                                         Target = p.Character
                                     end
                                 end
                             end
                         end
+                        
                         if Target then
-                            local TargetPos = Target.HumanoidRootPart.Position
-                            Camera.CFrame = CFrame.new(Camera.CFrame.Position, TargetPos)
+                            local Root = Target.HumanoidRootPart
+                            local Velocity = Root.Velocity
+                            local Distance = (Camera.CFrame.Position - Root.Position).Magnitude
+                            local TravelTime = Distance / 150 -- Ajuste de velocidad de bala en Overkill
+                            
+                            -- PREDICCIÓN: Apuntar a donde el enemigo ESTARÁ
+                            local PredictedPos = Root.Position + (Velocity * TravelTime)
+                            
+                            -- LERP: Movimiento suave para que no parezca bot
+                            Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, PredictedPos), 0.1)
                         end
                     end)
-                    task.wait()
+                    RunService.RenderStepped:Wait()
                 end
             end)
         end
     })
 
     Tabs.Specific:AddToggle("OverkillESP", {
-        Title = "ESP de Jugadores (Boxes)",
+        Title = "ESP Pro (Detección)",
+        Description = "Resalta a los enemigos a través de paredes.",
         Default = false,
         Callback = function(Value)
             _G.OverkillESP = Value
-            for _, player in pairs(game.Players:GetPlayers()) do
-                if player ~= game.Players.LocalPlayer and player.Character then
-                    if Value then
-                        local Highlight = Instance.new("Highlight")
-                        Highlight.Name = "onzeHub_ESP"
-                        Highlight.FillColor = Color3.fromRGB(0, 255, 255)
-                        Highlight.Parent = player.Character
-                    else
-                        local h = player.Character:FindFirstChild("onzeHub_ESP")
-                        if h then 
-                            h:Destroy() 
+            task.spawn(function()
+                while _G.OverkillESP do
+                    for _, player in pairs(game.Players:GetPlayers()) do
+                        if player ~= game.Players.LocalPlayer and player.Character then
+                            local h = player.Character:FindFirstChild("onzeHub_ESP")
+                            if not h then
+                                h = Instance.new("Highlight")
+                                h.Name = "onzeHub_ESP"
+                                h.Parent = player.Character
+                            end
+                            h.Enabled = true
+                            h.FillColor = Color3.fromRGB(255, 0, 50)
                         end
                     end
+                    task.wait(1)
                 end
-            end
+                -- Limpiar al apagar
+                for _, player in pairs(game.Players:GetPlayers()) do
+                    if player.Character and player.Character:FindFirstChild("onzeHub_ESP") then
+                        player.Character.onzeHub_ESP:Destroy()
+                    end
+                end
+            end)
         end
     })
 end
