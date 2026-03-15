@@ -165,32 +165,88 @@ function Module.Load(Tabs, Window, Fluent, Options)
     Tabs.Specific:AddSection("Caza Automática")
 
     Tabs.Specific:AddToggle("KillAura", {
-        Title = "Kill Aura (Auto Atacar)",
-        Description = "Ataca automáticamente a cualquier dinosaurio cercano",
+        Title = "Kill Aura Pro (Auto Atacar)",
+        Description = "Apunta y ataca automáticamente a dinosaurios cercanos",
         Default = false,
         Callback = function(Value)
             _G.KillAura = Value
             task.spawn(function()
                 while _G.KillAura do
                     pcall(function()
+                        local LocalPlayer = game.Players.LocalPlayer
+                        local Character = LocalPlayer.Character
+                        if not Character then return end
+                        
+                        local ClosestDino = nil
+                        local MinDist = 25
+                        
                         for _, player in pairs(game.Players:GetPlayers()) do
-                            if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                                local Distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                                if Distance < 20 then
-                                    -- Ejecutar ataque (simular click o disparar remoto de ataque)
-                                    local AttackRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Attack") or game:GetService("ReplicatedStorage"):FindFirstChild("Remotes"):FindFirstChild("Attack")
-                                    if AttackRemote then
-                                        AttackRemote:FireServer()
-                                    else
-                                        -- Si no hay remoto, intentamos simular un click
-                                        game:GetService("VirtualUser"):CaptureController()
-                                        game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
-                                    end
+                            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                                local Dist = (Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                                if Dist < MinDist then
+                                    MinDist = Dist
+                                    ClosestDino = player.Character
                                 end
                             end
                         end
+                        
+                        if ClosestDino then
+                            -- Apuntar al dinosaurio (LookAt)
+                            local TargetPos = ClosestDino.HumanoidRootPart.Position
+                            Character.HumanoidRootPart.CFrame = CFrame.new(Character.HumanoidRootPart.Position, Vector3.new(TargetPos.X, Character.HumanoidRootPart.Position.Y, TargetPos.Z))
+                            
+                            -- Simular el ataque (Bite)
+                            game:GetService("VirtualInputManager"):ClickButton1(Vector2.new(0,0))
+                        end
                     end)
                     task.wait(0.1)
+                end
+            end)
+        end
+    })
+
+    Tabs.Specific:AddSection("Crecimiento Rápido (Dino Top)")
+
+    Tabs.Specific:AddToggle("AutoFood", {
+        Title = "Buscar Comida Automáticamente",
+        Description = "Te gira hacia la comida más cercana (Meat/Eggs/Plants)",
+        Default = false,
+        Callback = function(Value)
+            _G.AutoFood = Value
+            task.spawn(function()
+                while _G.AutoFood do
+                    pcall(function()
+                        local Character = game.Players.LocalPlayer.Character
+                        if not Character then return end
+
+                        local FoodNames = {"Meat", "Egg", "Food", "Plant"}
+                        local ClosestFood = nil
+                        local MinDist = 150
+
+                        for _, v in pairs(workspace:GetDescendants()) do
+                            local IsFood = false
+                            for _, name in pairs(FoodNames) do
+                                if v.Name:find(name) and v:IsA("BasePart") then
+                                    IsFood = true
+                                    break
+                                end
+                            end
+
+                            if IsFood then
+                                local Dist = (Character.HumanoidRootPart.Position - v.Position).Magnitude
+                                if Dist < MinDist then
+                                    MinDist = Dist
+                                    ClosestFood = v
+                                end
+                            end
+                        end
+
+                        if ClosestFood then
+                            -- Girar hacia la comida
+                            Character.HumanoidRootPart.CFrame = CFrame.new(Character.HumanoidRootPart.Position, Vector3.new(ClosestFood.Position.X, Character.HumanoidRootPart.Position.Y, ClosestFood.Position.Z))
+                        end
+                    end)
+                    task.wait(0.5)
                 end
             end)
         end
