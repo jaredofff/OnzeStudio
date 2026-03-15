@@ -94,7 +94,8 @@ local GameSupport = {
     [13772394625] = "Blade Ball",
     [2753915549] = "Blox Fruits",
     [129907317028750] = "Be Dino",
-    [101878803733802] = "Overkill"
+    [101878803733802] = "Overkill",
+    [70390793715007] = "Hooked!"
 }
 
 -- Detección por ID o por nombre del producto
@@ -112,6 +113,9 @@ elseif not CurrentGameName and CheckName(GameInfo.Name, "Blade Ball") then
 elseif not CurrentGameName and CheckName(GameInfo.Name, "Overkill") then
     CurrentGameName = "Overkill"
     GameID = 101878803733802
+elseif not CurrentGameName and CheckName(GameInfo.Name, "Hooked") then
+    CurrentGameName = "Hooked!"
+    GameID = 70390793715007
 end
 
 CurrentGameName = CurrentGameName or "Universal"
