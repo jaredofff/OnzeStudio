@@ -83,7 +83,8 @@ function Module.Load(Tabs, Window, Fluent, Options)
                         local MinDist = 400 -- FOV Virtual
                         
                         for _, p in pairs(game.Players:GetPlayers()) do
-                            if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
+                            local lp = game.Players.LocalPlayer
+                            if p ~= lp and (not p.Team or p.Team ~= lp.Team) and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
                                 local Pos, OnScreen = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
                                 if OnScreen then
                                     local MousePos = game:GetService("UserInputService"):GetMouseLocation()

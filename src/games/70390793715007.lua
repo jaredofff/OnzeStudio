@@ -21,7 +21,8 @@ function Module.Load(Tabs, Window, Fluent, Options)
                         local Target = nil
                         local MinDist = 150
                         for _, p in pairs(game.Players:GetPlayers()) do
-                            if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
+                            local lp = game.Players.LocalPlayer
+                            if p ~= lp and (not p.Team or p.Team ~= lp.Team) and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
                                 local Dist = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
                                 if Dist < MinDist then
                                     MinDist = Dist
