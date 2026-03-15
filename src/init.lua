@@ -9,7 +9,6 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 -- [[ SISTEMA ANTI-DETECCIÓN AVANZADO ]]
--- [[ SISTEMA ANTI-DETECCIÓN AVANZADO ]]
 local function Protect(instance)
     pcall(function()
         if gethui then
