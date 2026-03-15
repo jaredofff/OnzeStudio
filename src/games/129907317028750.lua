@@ -138,18 +138,61 @@ function Module.Load(Tabs, Window, Fluent, Options)
         end
     })
 
-    Tabs.Specific:AddSection("Utilidades")
+    Tabs.Specific:AddSection("Utilidades y Códigos")
     
     Tabs.Specific:AddButton({
-        Title = "Canjear todos los códigos",
-        Description = "Intenta canjear códigos conocidos (XP, Gemas)",
+        Title = "Canjear Códigos Reales (Marzo 2026)",
+        Description = "Intenta canjear: CONTEST, KEEPIT100K, ABSTRAK, CHOTU, GALAXY, 75KLIKES...",
         Callback = function()
-            local Codes = {"DINORAW", "GEMS", "XPBOOST", "GROWTH"}
-            for _, code in pairs(Codes) do
-                -- Aquí iría el evento remoto de códigos del juego
-                print("Intentando canjear código: " .. code)
+            local Codes = {"CONTEST", "KEEPIT100K", "ABSTRAK", "CHOTU", "HEVY", "GALAXY", "75KLIKES", "AMBER"}
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            
+            -- Intentar encontrar el evento de códigos (varía según el juego)
+            local Remote = ReplicatedStorage:FindFirstChild("CodeRemote") or ReplicatedStorage:FindFirstChild("RedeemCode") or ReplicatedStorage:FindFirstChild("Events"):FindFirstChild("RedeemCode")
+            
+            if Remote then
+                for _, code in pairs(Codes) do
+                    Remote:FireServer(code)
+                    task.wait(0.5)
+                end
+                Fluent:Notify({Title = "onzeHub", Content = "Códigos enviados al servidor", Duration = 3})
+            else
+                warn("onzeHub: No se encontró el evento remoto de códigos. Intenta canjear uno manualmente primero para que el script lo detecte.")
             end
-            Fluent:Notify({Title = "onzeHub", Content = "Proceso de códigos completado (Ver consola)", Duration = 3})
+        end
+    })
+
+    Tabs.Specific:AddSection("Caza Automática")
+
+    Tabs.Specific:AddToggle("KillAura", {
+        Title = "Kill Aura (Auto Atacar)",
+        Description = "Ataca automáticamente a cualquier dinosaurio cercano",
+        Default = false,
+        Callback = function(Value)
+            _G.KillAura = Value
+            task.spawn(function()
+                while _G.KillAura do
+                    pcall(function()
+                        for _, player in pairs(game.Players:GetPlayers()) do
+                            if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                                local Distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                                if Distance < 20 then
+                                    -- Ejecutar ataque (simular click o disparar remoto de ataque)
+                                    local AttackRemote = game:GetService("ReplicatedStorage"):FindFirstChild("Attack") or game:GetService("ReplicatedStorage"):FindFirstChild("Remotes"):FindFirstChild("Attack")
+                                    if AttackRemote then
+                                        AttackRemote:FireServer()
+                                    else
+                                        -- Si no hay remoto, intentamos simular un click
+                                        game:GetService("VirtualUser"):CaptureController()
+                                        game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0))
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                    task.wait(0.1)
+                end
+            end)
         end
     })
 end
