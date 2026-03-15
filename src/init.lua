@@ -118,11 +118,6 @@ CurrentGameName = CurrentGameName or "Universal"
 
 if CurrentGameName ~= "Universal" then
     Tabs.Specific = Window:AddTab({ Title = CurrentGameName, Icon = "zap" })
-    Fluent:Notify({
-        Title = "onzeHub",
-        Content = "Módulo detectado: " .. CurrentGameName,
-        Duration = 5
-    })
 end
 
 local Options = Fluent.Options
@@ -165,17 +160,32 @@ end
 
 if Tabs.Specific then
     LoadModule(GameID, CurrentGameName)
+else
+    Fluent:Notify({
+        Title = "onzeHub",
+        Content = "Modo Universal Cargado (No se detectó juego específico)",
+        Duration = 5
+    })
 end
 
--- Botón de emergencia si no detecta el juego
+-- Botones de emergencia si no detecta el juego
 Tabs.Main:AddButton({
     Title = "Forzar Carga: Brookhaven",
-    Description = "Usa esto si no aparece la pestaña de Brookhaven automáticamente",
     Callback = function()
         if not Tabs.Specific then
             Tabs.Specific = Window:AddTab({ Title = "Brookhaven", Icon = "zap" })
         end
         LoadModule(492414410, "Brookhaven")
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "Forzar Carga: Overkill",
+    Callback = function()
+        if not Tabs.Specific then
+            Tabs.Specific = Window:AddTab({ Title = "Overkill", Icon = "zap" })
+        end
+        LoadModule(101878803733802, "Overkill")
     end
 })
 

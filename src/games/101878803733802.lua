@@ -68,8 +68,44 @@ function Module.Load(Tabs, Window, Fluent, Options)
 
     Tabs.Specific:AddSection("Visuales")
     
+    Tabs.Specific:AddToggle("Aimbot", {
+        Title = "Aimbot (Mirado Automático)",
+        Description = "Hace que tu cámara mire siempre al enemigo más cercano",
+        Default = false,
+        Callback = function(Value)
+            _G.Aimbot = Value
+            task.spawn(function()
+                local Camera = workspace.CurrentCamera
+                while _G.Aimbot do
+                    pcall(function()
+                        local Target = nil
+                        local MinDist = math.huge
+                        for _, p in pairs(game.Players:GetPlayers()) do
+                            if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
+                                local Pos, OnScreen = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
+                                if OnScreen then
+                                    local MousePos = game:GetService("UserInputService"):GetMouseLocation()
+                                    local Dist = (Vector2.new(Pos.X, Pos.Y) - MousePos).Magnitude
+                                    if Dist < MinDist then
+                                        MinDist = Dist
+                                        Target = p.Character
+                                    end
+                                end
+                            end
+                        end
+                        if Target then
+                            local TargetPos = Target.HumanoidRootPart.Position
+                            Camera.CFrame = CFrame.new(Camera.CFrame.Position, TargetPos)
+                        end
+                    end)
+                    task.wait()
+                end
+            end)
+        end
+    })
+
     Tabs.Specific:AddToggle("OverkillESP", {
-        Title = "ESP de Jugadores",
+        Title = "ESP de Jugadores (Boxes)",
         Default = false,
         Callback = function(Value)
             _G.OverkillESP = Value
