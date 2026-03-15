@@ -72,6 +72,7 @@ local Window = Fluent:CreateWindow({
 -- [[ SISTEMA DE LLAVES (LOGIN) ]]
 local LoginTab = Window:AddTab({ Title = "🔑 Acceso", Icon = "key" })
 local Tabs = {}
+local HubLoaded = false -- Control de duplicación
 
 local function InitHub()
     -- [[ DETECCIÓN DE JUEGOS ]]
@@ -221,13 +222,20 @@ LoginTab:AddButton({
     Callback = function()
         -- NOTA: Esto es una validación local. Para venta real, se conecta a una API.
         if MyKey == "ONZE-2026" then
+            if HubLoaded then 
+                Fluent:Notify({Title = "onzeHub", Content = "El Hub ya está cargado.", Duration = 2})
+                return 
+            end
+            
+            HubLoaded = true
             Fluent:Notify({
                 Title = "Acceso Concedido",
                 Content = "Cargando módulos de onzeHub...",
                 Duration = 3
             })
             InitHub()
-            -- Opcional: Podríamos cerrar la pestaña de login si la UI lo soporta
+            -- La pestaña de acceso ya no es necesaria tras el login
+            LoginTab:AddSection("Sesión Iniciada")
         else
             Fluent:Notify({
                 Title = "Error de Acceso",
