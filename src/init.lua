@@ -82,19 +82,27 @@ local Tabs = {
 
 -- [[ DETECCIÓN DE JUEGOS ]]
 local GameID = game.PlaceId
+print("onzeHub: Detectando Juego (ID: " .. tostring(GameID) .. ")")
+
 local GameSupport = {
     [492414410] = "Brookhaven",
     [13772394625] = "Blade Ball",
     [2753915549] = "Blox Fruits"
 }
 
-local CurrentGameName = GameSupport[GameID] or "Universal"
+-- Detectar por ID o por nombre del juego (más seguro para Solara)
+local CurrentGameName = GameSupport[GameID]
+if not CurrentGameName and game.Name:find("Brookhaven") then
+    CurrentGameName = "Brookhaven"
+    GameID = 492414410
+end
+CurrentGameName = CurrentGameName or "Universal"
 
 if CurrentGameName ~= "Universal" then
     Tabs.Specific = Window:AddTab({ Title = CurrentGameName, Icon = "zap" })
     Fluent:Notify({
         Title = "onzeHub",
-        Content = "Juego detectado: " .. CurrentGameName,
+        Content = "Módulo detectado: " .. CurrentGameName,
         Duration = 5
     })
 end
@@ -107,41 +115,31 @@ Tabs.Main:AddParagraph({
     Content = "Usuario: " .. game.Players.LocalPlayer.Name .. "\nID: " .. game.Players.LocalPlayer.UserId
 })
 
-Tabs.Main:AddButton({
-    Title = "Copiar Discord",
-    Description = "Únete a nuestra comunidad",
-    Callback = function()
-        setclipboard("https://discord.gg/V6FTB4u8ZH")
-        Fluent:Notify({
-            Title = "Copiado",
-            Content = "Enlace de Discord copiado al portapapeles",
-            Duration = 5
-        })
-    end
-})
-
--- [[ PESTAÑA DE JUEGO ESPECÍFICO ]]
+-- [[ CARGA DE MÓDULOS ESPECÍFICOS ]]
 if Tabs.Specific then
     local ModuleURL = "https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. GameID .. ".lua?t=" .. os.time()
+    print("onzeHub: Intentando cargar módulo desde " .. ModuleURL)
     
     local Success, GameModuleFunc = pcall(function()
-        return loadstring(game:HttpGet(ModuleURL))
+        return loadstring(game:HttpGet(ModuleURL))()
     end)
 
-    if Success and type(GameModuleFunc) == "function" then
-        local RunSuccess, GameModule = pcall(GameModuleFunc)
-        if RunSuccess and GameModule and GameModule.Load then
-            GameModule.Load(Tabs, Window, Fluent, Options)
-            print("onzeHub: Módulo de juego cargado con éxito.")
+    if Success and GameModuleFunc and type(GameModuleFunc.Load) == "function" then
+        local RunSuccess, Err = pcall(function()
+            GameModuleFunc.Load(Tabs, Window, Fluent, Options)
+        end)
+        
+        if RunSuccess then
+            print("onzeHub: Módulo [" .. CurrentGameName .. "] cargado correctamente.")
         else
-            warn("onzeHub: Error al ejecutar el módulo: " .. tostring(GameModule))
+            warn("onzeHub: Error al ejecutar Load(): " .. tostring(Err))
         end
     else
         Tabs.Specific:AddParagraph({
             Title = "Aviso",
-            Content = "No se pudieron cargar las funciones para este juego. Verifica tu conexión o la consola (F9)."
+            Content = "No se pudieron cargar las funciones específicas. Revisa F9 para ver el error."
         })
-        warn("onzeHub: No se pudo descargar el módulo desde: " .. ModuleURL)
+        warn("onzeHub: Error al importar módulo: " .. tostring(GameModuleFunc))
     end
 end
 
