@@ -222,20 +222,21 @@ LoginTab:AddButton({
     Callback = function()
         -- NOTA: Esto es una validación local. Para venta real, se conecta a una API.
         if MyKey == "ONZE-2026" then
-            if HubLoaded then 
-                Fluent:Notify({Title = "onzeHub", Content = "El Hub ya está cargado.", Duration = 2})
-                return 
-            end
-            
+            if HubLoaded then return end
             HubLoaded = true
+            
             Fluent:Notify({
                 Title = "Acceso Concedido",
                 Content = "Cargando módulos de onzeHub...",
                 Duration = 3
             })
+            
             InitHub()
-            -- La pestaña de acceso ya no es necesaria tras el login
-            LoginTab:AddSection("Sesión Iniciada")
+            
+            -- ELIMINAR LA PESTAÑA DE ACCESO PARA SIEMPRE
+            pcall(function()
+                LoginTab:Destroy()
+            end)
         else
             Fluent:Notify({
                 Title = "Error de Acceso",
