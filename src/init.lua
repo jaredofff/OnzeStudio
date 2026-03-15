@@ -82,7 +82,12 @@ local Tabs = {
 
 -- [[ DETECCIÓN DE JUEGOS ]]
 local GameID = game.PlaceId
-print("onzeHub: Detectando Juego (ID: " .. tostring(GameID) .. ")")
+local MarketplaceService = game:GetService("MarketplaceService")
+local GameInfo = {}
+
+pcall(function()
+    GameInfo = MarketplaceService:GetProductInfo(GameID)
+end)
 
 local GameSupport = {
     [492414410] = "Brookhaven",
@@ -90,12 +95,16 @@ local GameSupport = {
     [2753915549] = "Blox Fruits"
 }
 
--- Detectar por ID o por nombre del juego (más seguro para Solara)
+-- Detección por ID o por nombre del producto
 local CurrentGameName = GameSupport[GameID]
-if not CurrentGameName and game.Name:find("Brookhaven") then
+if not CurrentGameName and GameInfo.Name and string.find(GameInfo.Name, "Brookhaven") then
     CurrentGameName = "Brookhaven"
     GameID = 492414410
+elseif not CurrentGameName and GameInfo.Name and string.find(GameInfo.Name, "Blade Ball") then
+    CurrentGameName = "Blade Ball"
+    GameID = 13772394625
 end
+
 CurrentGameName = CurrentGameName or "Universal"
 
 if CurrentGameName ~= "Universal" then
@@ -112,13 +121,18 @@ local Options = Fluent.Options
 -- [[ PESTAÑA INICIO ]] 
 Tabs.Main:AddParagraph({
     Title = "¡Bienvenido a onzeHub!",
-    Content = "Usuario: " .. game.Players.LocalPlayer.Name .. "\nID: " .. game.Players.LocalPlayer.UserId
+    Content = string.format("Usuario: %s\nID Usuario: %d\nID Juego: %d\nNombre: %s", 
+        game.Players.LocalPlayer.Name, 
+        game.Players.LocalPlayer.UserId, 
+        game.PlaceId, 
+        GameInfo.Name or "No detectado"
+    )
 })
 
 -- [[ CARGA DE MÓDULOS ESPECÍFICOS ]]
-if Tabs.Specific then
-    local ModuleURL = "https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. GameID .. ".lua?t=" .. os.time()
-    print("onzeHub: Intentando cargar módulo desde " .. ModuleURL)
+local function LoadModule(TargetID, Name)
+    local ModuleURL = "https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. TargetID .. ".lua?t=" .. os.time()
+    print("onzeHub: Cargando módulo [" .. Name .. "] desde " .. ModuleURL)
     
     local Success, GameModuleFunc = pcall(function()
         return loadstring(game:HttpGet(ModuleURL))()
@@ -130,18 +144,31 @@ if Tabs.Specific then
         end)
         
         if RunSuccess then
-            print("onzeHub: Módulo [" .. CurrentGameName .. "] cargado correctamente.")
+            print("onzeHub: Módulo [" .. Name .. "] cargado correctamente.")
+            Fluent:Notify({Title = "onzeHub", Content = "Módulo [" .. Name .. "] cargado.", Duration = 3})
         else
             warn("onzeHub: Error al ejecutar Load(): " .. tostring(Err))
         end
     else
-        Tabs.Specific:AddParagraph({
-            Title = "Aviso",
-            Content = "No se pudieron cargar las funciones específicas. Revisa F9 para ver el error."
-        })
         warn("onzeHub: Error al importar módulo: " .. tostring(GameModuleFunc))
     end
 end
+
+if Tabs.Specific then
+    LoadModule(GameID, CurrentGameName)
+end
+
+-- Botón de emergencia si no detecta el juego
+Tabs.Main:AddButton({
+    Title = "Forzar Carga: Brookhaven",
+    Description = "Usa esto si no aparece la pestaña de Brookhaven automáticamente",
+    Callback = function()
+        if not Tabs.Specific then
+            Tabs.Specific = Window:AddTab({ Title = "Brookhaven", Icon = "zap" })
+        end
+        LoadModule(492414410, "Brookhaven")
+    end
+})
 
 -- [[ PESTAÑA JUEGOS (LISTA GENERAL) ]]
 Tabs.Games:AddSection("Juegos Soportados")
@@ -205,27 +232,6 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function(Character)
 end)
 
 -- [[ PESTAÑA AJUSTES (PERSONALIZACIÓN) ]]
-Tabs.Settings:AddSection("Apariencia")
-
-Tabs.Settings:AddDropdown("ThemeDropdown", {
-    Title = "Tema Visual",
-    Values = {"Dark", "Light", "Rose", "Aqua", "Amethyst"},
-    Multi = false,
-    Default = 1,
-    Callback = function(Value)
-        Fluent:SetTheme(Value)
-    end
-})
-
-Tabs.Settings:AddToggle("AcrylicToggle", {
-    Title = "Efecto Acrílico (Transparencia)",
-    Default = true,
-    Callback = function(Value)
-        Window:SetAcrylic(Value)
-    end
-})
-
-Tabs.Settings:AddSection("Sistema")
 
 InterfaceManager:SetLibrary(Fluent)
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)

@@ -57,10 +57,18 @@ function Module.Load(Tabs, Window, Fluent, Options)
                 local BodyDepth = Hum:FindFirstChild("BodyDepthScale")
                 local HeadScale = Hum:FindFirstChild("HeadScale")
                 
-                if BodyWidth then BodyWidth.Value = Value end
-                if BodyHeight then BodyHeight.Value = Value end
-                if BodyDepth then BodyDepth.Value = Value end
-                if HeadScale then HeadScale.Value = Value end
+                if BodyWidth then 
+                    BodyWidth.Value = Value 
+                end
+                if BodyHeight then 
+                    BodyHeight.Value = Value 
+                end
+                if BodyDepth then 
+                    BodyDepth.Value = Value 
+                end
+                if HeadScale then 
+                    HeadScale.Value = Value 
+                end
             end
         end
     })
