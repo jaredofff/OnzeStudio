@@ -75,8 +75,6 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.RightControl
 })
 
--- [[ SISTEMA DE LLAVES (LOGIN) ]]
-local LoginTab = Window:AddTab({ Title = "🔑 Acceso", Icon = "key" })
 local Tabs = {}
 local HubLoaded = false -- Control de duplicación
 
@@ -210,7 +208,7 @@ local function InitHub()
         SaveManager:BuildConfigSection(Tabs.Settings)
     end)
 
-    Window:SelectTab(2) -- Saltar a Inicio
+    Window:SelectTab(1) -- Saltar a Inicio
 
     -- [[ SISTEMA DE CACHÉ DE PERSONAJE ]]
     local LocalPlayer = game.Players.LocalPlayer
@@ -226,38 +224,15 @@ local function InitHub()
     end)
 end
 
--- Pestaña Login (Única activa al inicio)
-LoginTab:AddSection("Seguridad")
-local MyKey = ""
-LoginTab:AddInput("Key", {Title = "Key", Callback = function(v) MyKey = v end})
-
-LoginTab:AddButton({
-    Title = "Entrar",
-    Callback = function()
-        if MyKey == "ONZE-2026" then
-            if HubLoaded then return end
-            HubLoaded = true
-            InitHub()
-            
-            -- ELIMINAR ACCESO (Solución definitiva al duplicado y corrupción)
-            task.spawn(function()
-                pcall(function()
-                    LoginTab:Destroy() -- Destruye el objeto de la lista de tabs
-                end)
-                Window:SelectTab(2) -- Asegurar cambio a Inicio
-            end)
-        else
-            Fluent:Notify({Title = "Error", Content = "Key inválida", Duration = 3})
-        end
-    end
-})
+-- Inicializar el hub automáticamente sin Key
+if not HubLoaded then
+    HubLoaded = true
+    InitHub()
+end
 
 -- Proteger la interfaz
 Protect(game:GetService("CoreGui"):FindFirstChild("Fluent") or game:GetService("CoreGui"):FindFirstChild("ScreenGui"))
 
 -- Iconos: https://lucide.dev/icons
--- The actual Tabs creation is now inside InitHub()
 
--- All core logic is now moved inside InitHub() for security.
-Window:SelectTab(1)
 SaveManager:LoadAutoloadConfig()
