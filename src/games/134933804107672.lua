@@ -16,8 +16,8 @@ function Module.Load(Tabs, Window, Fluent, Options)
     Tabs.Specific:AddSection("Ventajas de Juego")
 
     Tabs.Specific:AddToggle("AutoSwing", {
-        Title = "Auto Swing / Auto Hit (Beta)",
-        Description = "Intenta golpear la pelota automáticamente cuando está cerca.",
+        Title = "Auto Hit / Swing Avanzado",
+        Description = "Golpea automáticamente. Mejorado para detectar el 'volante' (shuttlecock).",
         Default = false,
         Callback = function(Value)
             _G.AutoSwing = Value
@@ -30,39 +30,47 @@ function Module.Load(Tabs, Window, Fluent, Options)
                         local char = game.Players.LocalPlayer.Character
                         if char and char:FindFirstChild("HumanoidRootPart") then
                             
-                            -- Buscar pelota solo si la perdimos o cada 2 segundos, no en cada frame
                             if not targetBall or not targetBall.Parent or (tick() - lastSearch > 2) then
                                 lastSearch = tick()
                                 targetBall = nil
                                 
-                                -- Escaneo optimizado
                                 for _, v in pairs(workspace:GetDescendants()) do
-                                    if v:IsA("BasePart") and string.find(string.lower(v.Name), "ball") then
-                                        targetBall = v
-                                        break -- Ya encontramos una, paramos de buscar
+                                    if v:IsA("BasePart") then
+                                        local n = string.lower(v.Name)
+                                        if string.find(n, "ball") or string.find(n, "shuttle") or string.find(n, "birdie") or string.find(n, "tennis") then
+                                            targetBall = v
+                                            break
+                                        end
                                     end
                                 end
                             end
                             
                             if targetBall and targetBall.Parent then
                                 local dist = (char.HumanoidRootPart.Position - targetBall.Position).Magnitude
-                                if dist < 15 then 
-                                    -- Simular clic 
-                                    game:GetService("VirtualUser"):ClickButton1(Vector2.new(0,0))
-                                    task.wait(0.3) -- Cooldown para no spamear clics
+                                if dist < 25 then -- Distancia aumentada
+                                    -- Intentar métodos de clic más agresivos
+                                    if mouse1click then
+                                        mouse1click()
+                                    else
+                                        local vim = game:GetService("VirtualInputManager")
+                                        vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                                        task.wait(0.05)
+                                        vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                                    end
+                                    task.wait(0.4) -- Cooldown
                                 end
                             end
                         end
                     end)
-                    task.wait(0.05) -- Reacción rápida, pero el iterador pesado desaparece
+                    task.wait(0.05)
                 end
             end)
         end
     })
 
     Tabs.Specific:AddToggle("BallHitbox", {
-        Title = "Expandir Pelota (Hitbox)",
-        Description = "Hace que la pelota sea gigante en tu pantalla para no fallar.",
+        Title = "Expandir Hitbox del Objeto",
+        Description = "Hace que el volante/pelota sea gigante en tu pantalla.",
         Default = false,
         Callback = function(Value)
             _G.ExpandBall = Value
@@ -70,10 +78,13 @@ function Module.Load(Tabs, Window, Fluent, Options)
                 while _G.ExpandBall do
                     pcall(function()
                         for _, v in pairs(workspace:GetDescendants()) do
-                            if v:IsA("BasePart") and string.find(string.lower(v.Name), "ball") then
-                                v.Size = Vector3.new(12, 12, 12)
-                                v.Transparency = 0.5
-                                v.CanCollide = false -- Evita que interfiera con tu movimiento
+                            if v:IsA("BasePart") then
+                                local n = string.lower(v.Name)
+                                if string.find(n, "ball") or string.find(n, "shuttle") or string.find(n, "birdie") or string.find(n, "tennis") then
+                                    v.Size = Vector3.new(15, 15, 15)
+                                    v.Transparency = 0.5
+                                    v.CanCollide = false
+                                end
                             end
                         end
                     end)
@@ -86,7 +97,7 @@ function Module.Load(Tabs, Window, Fluent, Options)
     Tabs.Specific:AddSection("Visuales Avanzados")
 
     Tabs.Specific:AddToggle("BallESP", {
-        Title = "Rastrear Pelota (Ball ESP)",
+        Title = "ESP del Volante/Pelota",
         Default = false,
         Callback = function(Value)
             _G.BallESP = Value
@@ -94,13 +105,16 @@ function Module.Load(Tabs, Window, Fluent, Options)
                 while _G.BallESP do
                     pcall(function()
                         for _, v in pairs(workspace:GetDescendants()) do
-                            if v:IsA("BasePart") and string.find(string.lower(v.Name), "ball") then
-                                if not v:FindFirstChild("onze_ball_esp") then
-                                    local h = Instance.new("Highlight")
-                                    h.Name = "onze_ball_esp"
-                                    h.FillColor = Color3.fromRGB(255, 255, 0)
-                                    h.OutlineColor = Color3.fromRGB(255, 100, 0)
-                                    h.Parent = v
+                            if v:IsA("BasePart") then
+                                local n = string.lower(v.Name)
+                                if string.find(n, "ball") or string.find(n, "shuttle") or string.find(n, "birdie") or string.find(n, "tennis") then
+                                    if not v:FindFirstChild("onze_ball_esp") then
+                                        local h = Instance.new("Highlight")
+                                        h.Name = "onze_ball_esp"
+                                        h.FillColor = Color3.fromRGB(255, 255, 0)
+                                        h.OutlineColor = Color3.fromRGB(255, 0, 0)
+                                        h.Parent = v
+                                    end
                                 end
                             end
                         end
