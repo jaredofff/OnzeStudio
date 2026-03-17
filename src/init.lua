@@ -173,18 +173,33 @@ local function InitHub()
     })
     Tabs.Universal:AddToggle("UniversalESP", {Title = "ESP Jugadores (Básico)", Default = false, Callback = function(v)
         _G.UniversalESP = v
-        while _G.UniversalESP do
-            for _, player in pairs(game.Players:GetPlayers()) do
-                if player ~= game.Players.LocalPlayer and player.Character then
-                    if not player.Character:FindFirstChild("onze_esp") then
-                        local h = Instance.new("Highlight", player.Character)
-                        h.Name = "onze_esp"
-                        h.FillColor = Color3.fromRGB(255, 255, 255)
+        
+        task.spawn(function()
+            while _G.UniversalESP do
+                -- Luau Moderno (2024-2026): Ya no se usa pairs(), se itera directamente
+                for _, player in game.Players:GetPlayers() do
+                    if player ~= game.Players.LocalPlayer and player.Character then
+                        if not player.Character:FindFirstChild("onze_esp") then
+                            local h = Instance.new("Highlight")
+                            h.Name = "onze_esp"
+                            h.FillColor = Color3.fromRGB(255, 255, 255)
+                            -- Práctica moderna de Roblox: Siempre asignar el 'Parent' al final por rendimiento
+                            h.Parent = player.Character
+                        end
+                    end
+                end
+                task.wait(2)
+            end
+            
+            -- Sistema de limpieza si el usuario lo apaga
+            if not _G.UniversalESP then
+                for _, player in game.Players:GetPlayers() do
+                    if player.Character and player.Character:FindFirstChild("onze_esp") then
+                        player.Character:FindFirstChild("onze_esp"):Destroy()
                     end
                 end
             end
-            task.wait(2)
-        end
+        end)
     end})
 
     -- [[ CARGA DE ICONOS Y TEMAS OPTIMIZADA ]]
