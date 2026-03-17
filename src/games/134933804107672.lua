@@ -198,7 +198,9 @@ function Module.Load(Tabs, Window, Fluent, Options)
                     Fluent:Notify({Title = "onzeHub", Content = "Códigos enviados.", Duration = 3})
                 elseif remote and remote:IsA("RemoteFunction") then
                     for _, code in ipairs(codes) do
-                        pcall(function() remote:InvokeServer(code) end)
+                        pcall(function() 
+                            remote:InvokeServer(code) 
+                        end)
                         task.wait(0.2)
                     end
                     Fluent:Notify({Title = "onzeHub", Content = "Códigos enviados.", Duration = 3})
