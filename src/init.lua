@@ -212,11 +212,19 @@ local function InitHub()
         end)
     end})
 
-    -- [[ CARGA DE ICONOS Y TEMAS OPTIMIZADA ]]
+    -- [[ CARGA DE ICONOS, TEMAS Y GUARDADO (OFICIAL) ]]
     pcall(function()
-        InterfaceManager:SetLibrary(Fluent)
-        InterfaceManager:BuildInterfaceSection(Tabs.Settings)
         SaveManager:SetLibrary(Fluent)
+        InterfaceManager:SetLibrary(Fluent)
+        
+        -- Ignorar para no mezclar configuraciones visuales con las de hacks
+        SaveManager:IgnoreThemeSettings()
+        
+        -- Separar las configuraciones por juego (muy importante en Fluent)
+        InterfaceManager:SetFolder("onzeHub")
+        SaveManager:SetFolder("onzeHub/" .. tostring(GameID))
+        
+        InterfaceManager:BuildInterfaceSection(Tabs.Settings)
         SaveManager:BuildConfigSection(Tabs.Settings)
     end)
 
