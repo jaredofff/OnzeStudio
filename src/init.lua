@@ -132,6 +132,26 @@ local function InitHub()
         )
     })
 
+    -- Dialogo Pop-up de Bienvenida
+    Window:Dialog({
+        Title = "onzeHub VIP",
+        Content = string.format("¡Bienvenido, %s! Hemos detectado que estás jugando %s. ¿Deseas explorar los scripts asombrosos?", game.Players.LocalPlayer.Name, CurrentGameName),
+        Buttons = {
+            {
+                Title = "Let's Go!",
+                Callback = function()
+                    print("Dialogo aceptado")
+                end
+            },
+            {
+                Title = "Cancelar",
+                Callback = function()
+                    print("Dialogo cancelado")
+                end
+            }
+        }
+    })
+
     -- Función de carga
     local function LoadModule(id, name)
         local url = "https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. id .. ".lua?t=" .. os.time()
@@ -220,6 +240,16 @@ local function InitHub()
             if Fluent.Options.WalkSpeed then 
                 Hum.WalkSpeed = Fluent.Options.WalkSpeed.Value
             end
+        end
+    end)
+    
+    -- [[ MARCA DE AGUA (WATERMARK) ]]
+    -- Este código añade una cajita flotante atractiva en la esquina con tus FPS actuales
+    local ping = 0
+    task.spawn(function()
+        while task.wait(0.5) do
+            local fps = math.floor(1 / game:GetService("RunService").RenderStepped:Wait())
+            Window:SetWatermark(string.format("onzeHub VIP | FPS: %d | Ping: %d ms", fps, ping))
         end
     end)
 end
