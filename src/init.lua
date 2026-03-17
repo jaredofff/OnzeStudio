@@ -93,7 +93,8 @@ local function InitHub()
         [70390793715007] = "Hooked!",
         [75663528075786] = "How to Train Your Dragon",
         [134933804107672] = "Racket rivals",
-        [78912788107663] = "Racket rivals"
+        [78912788107663] = "Racket rivals",
+        [127794225497302] = "Abyss"
     }
 
     local CurrentGameName = GameSupport[GameID]
@@ -132,25 +133,15 @@ local function InitHub()
         )
     })
 
-    -- Dialogo Pop-up de Bienvenida
-    Window:Dialog({
-        Title = "onzeHub VIP",
-        Content = string.format("¡Bienvenido, %s! Hemos detectado que estás jugando %s. ¿Deseas explorar los scripts asombrosos?", game.Players.LocalPlayer.Name, CurrentGameName),
-        Buttons = {
-            {
-                Title = "Let's Go!",
-                Callback = function()
-                    print("Dialogo aceptado")
-                end
-            },
-            {
-                Title = "Cancelar",
-                Callback = function()
-                    print("Dialogo cancelado")
-                end
-            }
-        }
-    })
+    -- Bienvenida (Reemplaza al Dialog roto)
+    task.spawn(function()
+        task.wait(1)
+        Fluent:Notify({
+            Title = "✅ onzeHub VIP",
+            Content = string.format("¡Bienvenido %s! El script para %s se cargó con éxito.", game.Players.LocalPlayer.Name, CurrentGameName),
+            Duration = 6
+        })
+    end)
 
     -- Función de carga
     local function LoadModule(id, name)
@@ -175,6 +166,7 @@ local function InitHub()
     Tabs.Games:AddButton({Title = "Cargar: Dragon Master", Callback = function() LoadModule(75663528075786, "Dragon Master") end})
     Tabs.Games:AddButton({Title = "Cargar: Overkill", Callback = function() LoadModule(101878803733802, "Overkill") end})
     Tabs.Games:AddButton({Title = "Cargar: Racket rivals", Callback = function() LoadModule(134933804107672, "Racket rivals") end})
+    Tabs.Games:AddButton({Title = "Cargar: Abyss", Callback = function() LoadModule(127794225497302, "Abyss") end})
 
     -- [[ UNIVERSAL ]]
     Tabs.Universal:AddSlider("WalkSpeed", {
@@ -243,13 +235,42 @@ local function InitHub()
         end
     end)
     
-    -- [[ MARCA DE AGUA (WATERMARK) ]]
-    -- Este código añade una cajita flotante atractiva en la esquina con tus FPS actuales
-    local ping = 0
+    -- [[ MARCA DE AGUA CUSTOMIZADA ]]
     task.spawn(function()
+        local CoreGui = game:GetService("CoreGui")
+        -- Limpiar previous watermark if exists
+        local oldWm = CoreGui:FindFirstChild("onzeWatermark")
+        if oldWm then oldWm:Destroy() end
+        
+        local ScreenGui = Instance.new("ScreenGui")
+        ScreenGui.Name = "onzeWatermark"
+        ScreenGui.Parent = CoreGui
+        
+        local TextLabel = Instance.new("TextLabel")
+        TextLabel.Parent = ScreenGui
+        TextLabel.AnchorPoint = Vector2.new(1, 0)
+        TextLabel.Position = UDim2.new(1, -20, 0, 20)
+        TextLabel.Size = UDim2.new(0, 0, 0, 25)
+        TextLabel.AutomaticSize = Enum.AutomaticSize.X -- Ajusta el tamaño al texto
+        TextLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        TextLabel.BorderColor3 = Color3.fromRGB(80, 80, 100)
+        TextLabel.BorderSizePixel = 1
+        TextLabel.Text = " onzeHub VIP | FPS: -- "
+        TextLabel.TextColor3 = Color3.fromRGB(240, 240, 255)
+        TextLabel.TextSize = 14
+        TextLabel.Font = Enum.Font.Code
+        TextLabel.BackgroundTransparency = 0.2
+        
+        local UICorner = Instance.new("UICorner")
+        UICorner.CornerRadius = UDim.new(0, 4)
+        UICorner.Parent = TextLabel
+
         while task.wait(0.5) do
-            local fps = math.floor(1 / game:GetService("RunService").RenderStepped:Wait())
-            Window:SetWatermark(string.format("onzeHub VIP | FPS: %d | Ping: %d ms", fps, ping))
+            local start = tick()
+            game:GetService("RunService").RenderStepped:Wait()
+            local fps = math.floor(1 / (tick() - start))
+            
+            TextLabel.Text = string.format(" onzeHub VIP | FPS: %d | Ping: %dms ", fps, math.floor(game.Players.LocalPlayer:GetNetworkPing() * 1000) or 0)
         end
     end)
 end
