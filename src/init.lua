@@ -96,7 +96,8 @@ local function InitHub()
         [101878803733802] = "Overkill",
         [70390793715007] = "Hooked!",
         [75663528075786] = "How to Train Your Dragon",
-        [134933804107672] = "Racket rivals"
+        [134933804107672] = "Racket rivals",
+        [78912788107663] = "Racket rivals"
     }
 
     local CurrentGameName = GameSupport[GameID]
@@ -105,6 +106,10 @@ local function InitHub()
     if not CurrentGameName and CheckName(GameInfo.Name, "dragon") then
         CurrentGameName = "How to Train Your Dragon"
         GameID = 75663528075786
+    end
+
+    if CurrentGameName == "Racket rivals" then
+        GameID = 134933804107672
     end
 
     CurrentGameName = CurrentGameName or "Universal"
