@@ -59,13 +59,8 @@ else
     warn("onzeHub: Spoofing básico activado.")
 end
 
--- [[ OPTIMIZADOR DE MEMORIA (GC) ]]
-task.spawn(function()
-    while task.wait(60) do
-        local _ = collectgarbage("count")
-        collectgarbage("collect")
-    end
-end)
+-- [[ ELIMINADO: Optimizador de Memoria manual ]]
+-- (collectgarbage("collect") no funciona en Luau moderno y solo confundía al editor)
 
 local Window = Fluent:CreateWindow({
     Title = "onzeHub",
