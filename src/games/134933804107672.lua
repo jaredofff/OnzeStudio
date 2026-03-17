@@ -48,15 +48,11 @@ function Module.Load(Tabs, Window, Fluent, Options)
                             if targetBall and targetBall.Parent then
                                 local dist = (char.HumanoidRootPart.Position - targetBall.Position).Magnitude
                                 if dist < 25 then -- Distancia aumentada
-                                    -- Intentar métodos de clic más agresivos
-                                    if mouse1click then
-                                        mouse1click()
-                                    else
-                                        local vim = game:GetService("VirtualInputManager")
-                                        vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                                        task.wait(0.05)
-                                        vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-                                    end
+                                    -- Utilizar VirtualInputManager para clics simulados (100% compatible)
+                                    local vim = game:GetService("VirtualInputManager")
+                                    vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                                    task.wait(0.05)
+                                    vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
                                     task.wait(0.4) -- Cooldown
                                 end
                             end
