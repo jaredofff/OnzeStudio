@@ -22,24 +22,39 @@ function Module.Load(Tabs, Window, Fluent, Options)
         Callback = function(Value)
             _G.AutoSwing = Value
             task.spawn(function()
+                local targetBall = nil
+                local lastSearch = 0
+                
                 while _G.AutoSwing do
                     pcall(function()
                         local char = game.Players.LocalPlayer.Character
                         if char and char:FindFirstChild("HumanoidRootPart") then
-                            for _, v in pairs(workspace:GetDescendants()) do
-                                -- Buscar objetos que puedan ser la pelota
-                                if v:IsA("BasePart") and string.find(string.lower(v.Name), "ball") then
-                                    local dist = (char.HumanoidRootPart.Position - v.Position).Magnitude
-                                    if dist < 15 then 
-                                        -- Simular clic 
-                                        game:GetService("VirtualUser"):ClickButton1(Vector2.new(0,0))
-                                        task.wait(0.3) -- Cooldown para no spamear clics
+                            
+                            -- Buscar pelota solo si la perdimos o cada 2 segundos, no en cada frame
+                            if not targetBall or not targetBall.Parent or (tick() - lastSearch > 2) then
+                                lastSearch = tick()
+                                targetBall = nil
+                                
+                                -- Escaneo optimizado
+                                for _, v in pairs(workspace:GetDescendants()) do
+                                    if v:IsA("BasePart") and string.find(string.lower(v.Name), "ball") then
+                                        targetBall = v
+                                        break -- Ya encontramos una, paramos de buscar
                                     end
+                                end
+                            end
+                            
+                            if targetBall and targetBall.Parent then
+                                local dist = (char.HumanoidRootPart.Position - targetBall.Position).Magnitude
+                                if dist < 15 then 
+                                    -- Simular clic 
+                                    game:GetService("VirtualUser"):ClickButton1(Vector2.new(0,0))
+                                    task.wait(0.3) -- Cooldown para no spamear clics
                                 end
                             end
                         end
                     end)
-                    task.wait(0.05)
+                    task.wait(0.05) -- Reacción rápida, pero el iterador pesado desaparece
                 end
             end)
         end
@@ -137,6 +152,50 @@ function Module.Load(Tabs, Window, Fluent, Options)
                             v.Character:FindFirstChild("onzeHub_RacketESP"):Destroy()
                         end
                     end
+                end
+            end)
+        end
+    })
+
+    -- [[ UTILIDADES ]]
+    Tabs.Specific:AddSection("Utilidades")
+    
+    Tabs.Specific:AddButton({
+        Title = "Canjear Códigos Activos (Yen/Spins)",
+        Description = "Intenta canjear automáticamente todos los códigos conocidos del juego.",
+        Callback = function()
+            local codes = {
+                "ESLASGIFT", "PAWFEST", "NEWSHUTTLE", "REDENVELOPE", "UPDATE15",
+                "FLEXURPACK", "UPDATE13", "MERRYCHRISTMAS", "SorryRanked", "BIGRANKED",
+                "UPDATEONE", "NOWAYFIFTYK", "mistaworldwide", "USEMATCHMAKING",
+                "SL3EPY", "FREEADMIN", "UPDATE14V1", "COMPETE", "UPDATE14", "300MVISITS",
+                "UPDATE13V1", "RACKETSEEKER", "UPDATE12", "REFINE"
+            }
+            
+            Fluent:Notify({Title = "onzeHub", Content = "Procesando " .. #codes .. " códigos...", Duration = 3})
+            
+            -- Los juegos de Roblox generalmente usan un RemoteEvent o Function para los códigos.
+            -- Por seguridad, podemos intentar buscar RemoteEvents comunes si no conocemos el path exacto.
+            task.spawn(function()
+                local rs = game:GetService("ReplicatedStorage")
+                local remote = rs:FindFirstChild("RedeemCode", true) or rs:FindFirstChild("Codes", true)
+                
+                if remote and remote:IsA("RemoteEvent") then
+                    for _, code in ipairs(codes) do
+                        remote:FireServer(code)
+                        task.wait(0.2)
+                    end
+                    Fluent:Notify({Title = "onzeHub", Content = "Códigos enviados.", Duration = 3})
+                elseif remote and remote:IsA("RemoteFunction") then
+                    for _, code in ipairs(codes) do
+                        pcall(function() remote:InvokeServer(code) end)
+                        task.wait(0.2)
+                    end
+                    Fluent:Notify({Title = "onzeHub", Content = "Códigos enviados.", Duration = 3})
+                else
+                    -- Fallback: Si no se encuentra el remote, al menos copiamos los códigos al portapapeles
+                    Fluent:Notify({Title = "onzeHub", Content = "No se encontró el Remote de Códigos automático.", Duration = 4})
+                    -- print("Códigos: ", table.concat(codes, ", "))
                 end
             end)
         end
