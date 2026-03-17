@@ -27,16 +27,13 @@ function Module.Load(Tabs, Window, Fluent, Options)
                         local char = game.Players.LocalPlayer.Character
                         if char then
                             local tool = char:FindFirstChildOfClass("Tool")
-                            -- Intenta hacer clic virtual si tienes una caña
+                            -- En lugar de "secuestrar" el mouse físico, activamos el código interno del objeto directamente
                             if tool and string.find(string.lower(tool.Name), "rod") then
-                                local vim = game:GetService("VirtualInputManager")
-                                vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                                task.wait(0.1)
-                                vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                                tool:Activate() 
                             end
                         end
                     end)
-                    task.wait(2) -- Intenta cada 2 segundos
+                    task.wait(2.5) -- Pausa saludable para que no se sature
                 end
             end)
         end
@@ -51,13 +48,30 @@ function Module.Load(Tabs, Window, Fluent, Options)
             task.spawn(function()
                 while _G.AutoReel do
                     pcall(function()
-                        -- Muchos juegos de pesca usan GUI para el minijuego, hacemos clics veloces como simulación genérica
-                        local vim = game:GetService("VirtualInputManager")
-                        vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                        task.wait(0.05)
-                        vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                        local playerGui = game.Players.LocalPlayer.PlayerGui
+                        
+                        -- Buscamos todos los botones dentro del PlayerGui que puedan ser del minijuego
+                        for _, gui in playerGui:GetDescendants() do
+                            if gui:IsA("TextButton") or gui:IsA("ImageButton") then
+                                local name = string.lower(gui.Name)
+                                -- Patrones comunes en minijuegos de pesca
+                                if gui.Visible and (
+                                    string.find(name, "reel") or
+                                    string.find(name, "catch") or
+                                    string.find(name, "pull") or
+                                    string.find(name, "hold") or
+                                    string.find(name, "press") or
+                                    string.find(name, "fish")
+                                ) then
+                                    -- Disparar el evento del botón directamente sin mover el mouse
+                                    gui.MouseButton1Down:Fire()
+                                    task.wait(0.05)
+                                    gui.MouseButton1Up:Fire()
+                                end
+                            end
+                        end
                     end)
-                    task.wait(0.1)
+                    task.wait(0.08) -- Muy reactivo para no perder la ventana del minijuego
                 end
             end)
         end
