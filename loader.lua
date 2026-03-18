@@ -10,7 +10,7 @@ local function LoadScript()
     warn("onzeHub: Cargando componentes...")
     
     -- Versión en la nube de onzeHub
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/init.lua"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/init.lua?t=" .. os.time()))()
     print("onzeHub: Sistema cargado desde GitHub correctamente.")
 end
 
