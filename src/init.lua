@@ -96,6 +96,7 @@ local function InitHub()
         [78912788107663] = "Racket rivals",
         [127794225497302] = "Abyss",
         [9748721976] = "Poppy Playtime",
+        [125414435147411] = "Poppy Playtime", -- Servidor/Lobby Chapter 2
         [6872265039] = "Bedwars"
     }
 
@@ -109,6 +110,11 @@ local function InitHub()
 
     if CurrentGameName == "Racket rivals" then
         GameID = 134933804107672
+    end
+
+    -- Redirigir lobby de Poppy Playtime al script principal
+    if CurrentGameName == "Poppy Playtime" then
+        GameID = 9748721976
     end
 
     CurrentGameName = CurrentGameName or "Universal"
