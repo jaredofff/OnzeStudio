@@ -94,7 +94,8 @@ local function InitHub()
         [75663528075786] = "How to Train Your Dragon",
         [134933804107672] = "Racket rivals",
         [78912788107663] = "Racket rivals",
-        [127794225497302] = "Abyss"
+        [127794225497302] = "Abyss",
+        [6872265039] = "Bedwars"
     }
 
     local CurrentGameName = GameSupport[GameID]
@@ -167,6 +168,7 @@ local function InitHub()
     Tabs.Games:AddButton({Title = "Cargar: Overkill", Callback = function() LoadModule(101878803733802, "Overkill") end})
     Tabs.Games:AddButton({Title = "Cargar: Racket rivals", Callback = function() LoadModule(134933804107672, "Racket rivals") end})
     Tabs.Games:AddButton({Title = "Cargar: Abyss", Callback = function() LoadModule(127794225497302, "Abyss") end})
+    Tabs.Games:AddButton({Title = "Cargar: Bedwars", Callback = function() LoadModule(6872265039, "Bedwars") end})
 
     -- [[ UNIVERSAL ]]
     Tabs.Universal:AddSlider("WalkSpeed", {
