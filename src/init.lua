@@ -97,7 +97,8 @@ local function InitHub()
         [127794225497302] = "Abyss",
         [9748721976] = "Poppy Playtime",
         [125414435147411] = "Poppy Playtime", -- Servidor/Lobby Chapter 2
-        [6872265039] = "Bedwars"
+        [6872265039] = "Bedwars",
+        [117090155680637] = "Rusty Rafts"
     }
 
     local CurrentGameName = GameSupport[GameID]
@@ -177,6 +178,7 @@ local function InitHub()
     Tabs.Games:AddButton({Title = "Cargar: Abyss", Callback = function() LoadModule(127794225497302, "Abyss") end})
     Tabs.Games:AddButton({Title = "Cargar: Poppy Playtime", Callback = function() LoadModule(9748721976, "Poppy Playtime") end})
     Tabs.Games:AddButton({Title = "Cargar: Bedwars", Callback = function() LoadModule(6872265039, "Bedwars") end})
+    Tabs.Games:AddButton({Title = "Cargar: Rusty Rafts", Callback = function() LoadModule(117090155680637, "Rusty Rafts") end})
 
     -- [[ UNIVERSAL ]]
     Tabs.Universal:AddSlider("WalkSpeed", {
