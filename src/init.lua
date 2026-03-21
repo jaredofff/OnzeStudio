@@ -144,6 +144,13 @@ local function InitHub()
         )
     })
 
+    -- DEBUG: Notificar que se detectó el juego
+    Fluent:Notify({
+        Title = "onzeHub Debug",
+        Content = "Juego Detectado: " .. tostring(CurrentGameName) .. " (ID: " .. tostring(GameID) .. ")",
+        Duration = 5
+    })
+
     -- Bienvenida (Reemplaza al Dialog roto)
     task.spawn(function()
         task.wait(1)
