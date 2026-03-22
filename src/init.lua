@@ -181,17 +181,72 @@ local function InitHub()
 
     -- [[ PESTAÑA JUEGOS (MANUAL) ]]
     Tabs.Games:AddSection("Soportados Oficialmente")
-    Tabs.Games:AddButton({Title = "Cargar: Brookhaven", Callback = function() LoadModule(492414410, "Brookhaven") end})
-    Tabs.Games:AddButton({Title = "Cargar: Dragon Master", Callback = function() LoadModule(75663528075786, "Dragon Master") end})
-    Tabs.Games:AddButton({Title = "Cargar: Overkill", Callback = function() LoadModule(101878803733802, "Overkill") end})
-    Tabs.Games:AddButton({Title = "Cargar: Racket rivals", Callback = function() LoadModule(134933804107672, "Racket rivals") end})
-    Tabs.Games:AddButton({Title = "Cargar: Abyss", Callback = function() LoadModule(127794225497302, "Abyss") end})
-    Tabs.Games:AddButton({Title = "Cargar: Poppy Playtime", Callback = function() LoadModule(9748721976, "Poppy Playtime") end})
-    Tabs.Games:AddButton({Title = "Cargar: Bedwars", Callback = function() LoadModule(6872265039, "Bedwars") end})
-    Tabs.Games:AddButton({Title = "Cargar: Rusty Rafts", Callback = function() LoadModule(117090155680637, "Rusty Rafts") end})
-    Tabs.Games:AddButton({Title = "Cargar: Build a Zoo", Callback = function() LoadModule(105555311806207, "Build a Zoo") end})
-    Tabs.Games:AddButton({Title = "Cargar: King Legacy", Callback = function() LoadModule(4520749081, "King Legacy") end})
-    Tabs.Games:AddButton({Title = "Cargar: Sailor Piece", Callback = function() LoadModule(77747658251236, "Sailor Piece") end})
+    Tabs.Games:AddButton({
+        Title = "Cargar: Brookhaven", 
+        Callback = function() 
+            LoadModule(492414410, "Brookhaven") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Dragon Master", 
+        Callback = function() 
+            LoadModule(75663528075786, "Dragon Master") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Overkill", 
+        Callback = function() 
+            LoadModule(101878803733802, "Overkill") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Racket rivals", 
+        Callback = function() 
+            LoadModule(134933804107672, "Racket rivals") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Abyss", 
+        Callback = function() 
+            LoadModule(127794225497302, "Abyss") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Poppy Playtime", 
+        Callback = function() 
+            LoadModule(9748721976, "Poppy Playtime") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Bedwars", 
+        Callback = function() 
+            LoadModule(6872265039, "Bedwars") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Rusty Rafts", 
+        Callback = function() 
+            LoadModule(117090155680637, "Rusty Rafts") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Build a Zoo", 
+        Callback = function() 
+            LoadModule(105555311806207, "Build a Zoo") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: King Legacy", 
+        Callback = function() 
+            LoadModule(4520749081, "King Legacy") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Sailor Piece", 
+        Callback = function() 
+            LoadModule(77747658251236, "Sailor Piece") 
+        end
+    })
 
     -- [[ UNIVERSAL ]]
     Tabs.Universal:AddSlider("WalkSpeed", {
