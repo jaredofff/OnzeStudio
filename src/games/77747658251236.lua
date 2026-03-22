@@ -10,7 +10,7 @@ function Module.Load(Tabs, Window, Fluent, Options)
 
     Tabs.Specific:AddParagraph({
         Title = "Sailor Piece Premium",
-        Content = "Script optimizado para Sailor Piece. Incluye Autofarm, Kill Aura y utilidades de reroll."
+        Content = "Script optimizado para Sailor Piece. Incluye Kill Aura, Teletransportes y utilidades de reroll."
     })
 
     -- Helpers
@@ -26,21 +26,61 @@ function Module.Load(Tabs, Window, Fluent, Options)
     end
 
     -- =============================================
-    -- [[ SECCIÓN: AUTOFARM ]]
+    -- [[ SECCIÓN: COMBATE ]]
     -- =============================================
-    Tabs.Specific:AddSection("Auto Farm")
+    Tabs.Specific:AddSection("Combate")
 
-    local function GetClosestEnemy()
+    Tabs.Specific:AddToggle("SP_KillAura", {
+        Title = "Kill Aura (Solo Cerca)",
+        Description = "Ataca automáticamente a los enemigos que estén a menos de 40 studs.",
+        Default = false,
+        Callback = function(Value)
+            _G.SP_KillAura = Value
+        end
+    })
+
+    -- Bucle único para Kill Aura
+    task.spawn(function()
+        while true do
+            if _G.SP_KillAura then
+                pcall(function()
+                    local hrp = getHRP()
+                    if not hrp then return end
+                    
+                    local enemies = workspace:FindFirstChild("Enemies") or workspace
+                    for _, v in pairs(enemies:GetChildren()) do
+                        if not _G.SP_KillAura then break end
+                        local eHRP = v:FindFirstChild("HumanoidRootPart")
+                        local eHum = v:FindFirstChild("Humanoid")
+                        if eHRP and eHum and eHum.Health > 0 then
+                            local dist = (hrp.Position - eHRP.Position).Magnitude
+                            if dist < 40 then
+                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                                task.wait(0.1)
+                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                            end
+                        end
+                    end
+                end)
+            end
+            task.wait(0.1)
+        end
+    end)
+
+    -- =============================================
+    -- [[ SECCIÓN: TELEPORT ]]
+    -- =============================================
+    Tabs.Specific:AddSection("Teletransportes")
+
+    local function GetClosestSPEnemy()
         local hrp = getHRP()
         if not hrp then return nil end
         local target = nil
-        local minDist = 2000
-        
+        local minDist = 5000
         local enemies = workspace:FindFirstChild("Enemies") or workspace
         for _, v in pairs(enemies:GetChildren()) do
             local eHRP = v:FindFirstChild("HumanoidRootPart")
-            local eHum = v:FindFirstChild("Humanoid")
-            if eHRP and eHum and eHum.Health > 0 then
+            if eHRP and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
                 local dist = (hrp.Position - eHRP.Position).Magnitude
                 if dist < minDist then
                     minDist = dist
@@ -51,46 +91,23 @@ function Module.Load(Tabs, Window, Fluent, Options)
         return target
     end
 
-    Tabs.Specific:AddToggle("SP_AutoFarm", {
-        Title = "Auto Farm (Enemigos)",
-        Description = "Ataca y farmea a los enemigos automáticamente.",
-        Default = false,
-        Callback = function(Value)
-            _G.SP_AutoFarm = Value
-            if not Value then
-                -- Forzar limpieza de velocidad al apagar
-                local hrp = getHRP()
-                if hrp then hrp.AssemblyLinearVelocity = Vector3.new(0,0,0) end
+    Tabs.Specific:AddButton({
+        Title = "Teleport al Enemigo más cercano",
+        Description = "Te lleva instantáneamente frente a un enemigo para pelear.",
+        Callback = function()
+            local target = GetClosestSPEnemy()
+            local hrp = getHRP()
+            if target and hrp then
+                local eHRP = target:FindFirstChild("HumanoidRootPart")
+                if eHRP then
+                    hrp.CFrame = eHRP.CFrame * CFrame.new(0, 5, 2)
+                    Fluent:Notify({Title = "Sailor Piece", Content = "✓ Teletransportado a: " .. target.Name, Duration = 2})
+                end
+            else
+                Fluent:Notify({Title = "Sailor Piece", Content = "No se encontraron enemigos cerca.", Duration = 2})
             end
         end
     })
-
-    -- Bucle único persistente para evitar duplicación de hilos
-    task.spawn(function()
-        while true do
-            if _G.SP_AutoFarm then
-                pcall(function()
-                    local hrp = getHRP()
-                    local target = GetClosestEnemy()
-                    
-                    if target and hrp and _G.SP_AutoFarm then
-                        local eHRP = target:FindFirstChild("HumanoidRootPart")
-                        if eHRP then
-                            -- Teletransporte suave (arriba del enemigo)
-                            hrp.CFrame = eHRP.CFrame * CFrame.new(0, 7, 0)
-                            hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
-                            
-                            -- Ataque
-                            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                            task.wait(0.1)
-                            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-                        end
-                    end
-                end)
-            end
-            task.wait(0.1)
-        end
-    end)
 
     -- =============================================
     -- [[ SECCIÓN: UTILIDADES ]]
@@ -131,15 +148,16 @@ function Module.Load(Tabs, Window, Fluent, Options)
         Default = false,
         Callback = function(Value)
             _G.SP_Geppo = Value
-            game:GetService("UserInputService").JumpRequest:Connect(function()
-                if _G.SP_Geppo then
-                    local char = getChar()
-                    local hum = char and char:FindFirstChild("Humanoid")
-                    if hum then hum:ChangeState("Jumping") end
-                end
-            end)
         end
     })
+
+    game:GetService("UserInputService").JumpRequest:Connect(function()
+        if _G.SP_Geppo then
+            local char = getChar()
+            local hum = char and char:FindFirstChild("Humanoid")
+            if hum then hum:ChangeState("Jumping") end
+        end
+    end)
 
 end
 

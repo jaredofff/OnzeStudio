@@ -10,7 +10,7 @@ function Module.Load(Tabs, Window, Fluent, Options)
 
     Tabs.Specific:AddParagraph({
         Title = "King Legacy VIP",
-        Content = "Script avanzado de onzeHub. Incluye Autofarm, Kill Aura mejorado y Teletransportes. ¡Usa con discreción!"
+        Content = "Script avanzado de King Legacy. Totalmente optimizado."
     })
 
     -- Helpers
@@ -30,17 +30,53 @@ function Module.Load(Tabs, Window, Fluent, Options)
     end
 
     -- =============================================
-    -- [[ SECCIÓN: AUTOFARM ]]
+    -- [[ SECCIÓN: COMBATE ]]
     -- =============================================
-    Tabs.Specific:AddSection("Auto Farm")
+    Tabs.Specific:AddSection("Combate")
 
-    local function GetKLTarget()
+    Tabs.Specific:AddToggle("KL_KillAura", {
+        Title = "Kill Aura (Solo Cerca)",
+        Description = "Ataca solo si los enemigos están en un radio de 40 studs.",
+        Default = false,
+        Callback = function(Value)
+            _G.KL_KillAura = Value
+        end
+    })
+
+    -- Bucle Kill Aura único
+    task.spawn(function()
+        while true do
+            if _G.KL_KillAura then
+                pcall(function()
+                    local hrp = getHRP()
+                    if not hrp then return end
+                    for _, v in pairs(workspace:FindFirstChild("Enemies") and workspace.Enemies:GetChildren() or workspace:GetDescendants()) do
+                        if not _G.KL_KillAura then break end
+                        if v:IsA("Model") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                            local eHRP = v:FindFirstChild("HumanoidRootPart")
+                            if eHRP and (hrp.Position - eHRP.Position).Magnitude < 40 then
+                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                                task.wait(0.1)
+                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                            end
+                        end
+                    end
+                end)
+            end
+            task.wait(0.1)
+        end
+    end)
+
+    -- =============================================
+    -- [[ SECCIÓN: TELEPORT ]]
+    -- =============================================
+    Tabs.Specific:AddSection("Teleport")
+
+    local function GetClosestKLTarget()
         local hrp = getHRP()
         if not hrp then return nil end
         local t = nil
-        local minDist = 2000
-        
-        -- Buscar en workspace.Enemies
+        local minDist = 5000
         for _, v in pairs(workspace:FindFirstChild("Enemies") and workspace.Enemies:GetChildren() or workspace:GetDescendants()) do
             if v:IsA("Model") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
                 local eHRP = v:FindFirstChild("HumanoidRootPart")
@@ -56,82 +92,27 @@ function Module.Load(Tabs, Window, Fluent, Options)
         return t
     end
 
-    Tabs.Specific:AddToggle("KL_AutoFarm", {
-        Title = "Auto Farm Level (Beta)",
-        Description = "Teletransporta a los enemigos y los ataca automáticamente.",
-        Default = false,
-        Callback = function(Value)
-            _G.KL_AutoFarm = Value
-            if not Value then
-                local hrp = getHRP()
-                if hrp then hrp.AssemblyLinearVelocity = Vector3.new(0,0,0) end
+    Tabs.Specific:AddButton({
+        Title = "Teleport al Enemigo más cercano",
+        Callback = function()
+            local target = GetClosestKLTarget()
+            local hrp = getHRP()
+            if target and hrp then
+                local eHRP = target:FindFirstChild("HumanoidRootPart")
+                if eHRP then
+                    hrp.CFrame = eHRP.CFrame * CFrame.new(0, 5, 2)
+                    Fluent:Notify({Title = "King Legacy", Content = "✓ TP a: " .. target.Name, Duration = 2})
+                end
+            else
+                Fluent:Notify({Title = "King Legacy", Content = "No hay enemigos cerca.", Duration = 2})
             end
         end
     })
-
-    -- Bucle único para evitar hilos fantasmas
-    task.spawn(function()
-        while true do
-            if _G.KL_AutoFarm then
-                pcall(function()
-                    local target = GetKLTarget()
-                    local hrp = getHRP()
-                    if target and hrp and _G.KL_AutoFarm then
-                        local eHRP = target:FindFirstChild("HumanoidRootPart")
-                        if eHRP then
-                            hrp.CFrame = eHRP.CFrame * CFrame.new(0, 7, 0)
-                            hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
-                            
-                            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                            task.wait(0.1)
-                            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-                        end
-                    end
-                end)
-            end
-            task.wait(0.1)
-        end
-    end)
-
-    -- =============================================
-    -- [[ SECCIÓN: COMBATE ]]
-    -- =============================================
-    Tabs.Specific:AddSection("Combate Avanzado")
-
-    Tabs.Specific:AddToggle("KL_KillAura", {
-        Title = "Kill Aura Premium",
-        Default = false,
-        Callback = function(Value)
-            _G.KL_KillAura = Value
-        end
-    })
-
-    -- Bucle Kill Aura único
-    task.spawn(function()
-        while true do
-            if _G.KL_KillAura then
-                pcall(function()
-                    local hrp = getHRP()
-                    if not hrp then return end
-                    for _, v in pairs(workspace:FindFirstChild("Enemies") and workspace.Enemies:GetChildren() or {}) do
-                        if not _G.KL_KillAura then break end
-                        local eHRP = v:FindFirstChild("HumanoidRootPart")
-                        if eHRP and (hrp.Position - eHRP.Position).Magnitude < 25 then
-                            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                            task.wait(0.01)
-                            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-                        end
-                    end
-                end)
-            end
-            task.wait(0.1)
-        end
-    end)
 
     -- =============================================
     -- [[ SECCIÓN: VISUALES ]]
     -- =============================================
-    Tabs.Specific:AddSection("Visuales (Premium)")
+    Tabs.Specific:AddSection("Visuales")
 
     Tabs.Specific:AddToggle("KL_FruitESP", {
         Title = "ESP de Frutas (Auto)",
