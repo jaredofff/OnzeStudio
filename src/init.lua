@@ -164,20 +164,29 @@ local function InitHub()
 
     -- Función de carga
     local function LoadModule(id, name)
-        local url = "https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. id .. ".lua?t=" .. os.time()
+        local idStr = string.format("%.0f", id)
+        local url = "https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. idStr .. ".lua?t=" .. os.time()
+        
         local success, mod = pcall(function() 
             return loadstring(game:HttpGet(url))() 
         end)
         
         if success and mod then
             pcall(function() 
-                mod.Load(Tabs, Window, Fluent, Fluent.Options) 
+                mod.Load(Tabs, Window, Fluent, Options) 
             end)
-            Fluent:Notify({Title = "onzeHub", Content = name .. " cargado.", Duration = 3})
+            Fluent:Notify({Title = "onzeHub", Content = "✓ " .. name .. " cargado correctamente.", Duration = 4})
+        else
+            warn("onzeHub Error: No se pudo cargar el módulo (" .. tostring(idStr) .. "). Error: " .. tostring(mod))
+            Fluent:Notify({Title = "onzeHub Error", Content = "Error al descargar el módulo para " .. name, Duration = 5})
         end
     end
 
-    if Tabs.Specific then LoadModule(GameID, CurrentGameName) end
+    if Tabs.Specific then 
+        task.spawn(function()
+            LoadModule(GameID, CurrentGameName) 
+        end)
+    end
 
     -- [[ PESTAÑA JUEGOS (MANUAL) ]]
     Tabs.Games:AddSection("Soportados Oficialmente")
