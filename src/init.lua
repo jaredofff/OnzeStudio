@@ -100,7 +100,8 @@ local function InitHub()
         [6872265039] = "Bedwars",
         [117090155680637] = "Rusty Rafts",
         [105555311806207] = "Build a Zoo",
-        [4520749081] = "King Legacy"
+        [4520749081] = "King Legacy",
+        [77747658251236] = "Sailor Piece"
     }
 
     local CurrentGameName = GameSupport[GameID]
@@ -190,6 +191,7 @@ local function InitHub()
     Tabs.Games:AddButton({Title = "Cargar: Rusty Rafts", Callback = function() LoadModule(117090155680637, "Rusty Rafts") end})
     Tabs.Games:AddButton({Title = "Cargar: Build a Zoo", Callback = function() LoadModule(105555311806207, "Build a Zoo") end})
     Tabs.Games:AddButton({Title = "Cargar: King Legacy", Callback = function() LoadModule(4520749081, "King Legacy") end})
+    Tabs.Games:AddButton({Title = "Cargar: Sailor Piece", Callback = function() LoadModule(77747658251236, "Sailor Piece") end})
 
     -- [[ UNIVERSAL ]]
     Tabs.Universal:AddSlider("WalkSpeed", {
