@@ -42,7 +42,8 @@ function Module.Load(Tabs, Window, Fluent, Options)
             _G.KL_AutoFarm = Value
             task.spawn(function()
                 while _G.KL_AutoFarm do
-                    pcall(function()
+                    local success, err = pcall(function()
+                        if not _G.KL_AutoFarm then return end
                         local hrp = getHRP()
                         if not hrp then return end
                         
@@ -51,6 +52,7 @@ function Module.Load(Tabs, Window, Fluent, Options)
                         local minDist = 1500 -- Rango de búsqueda
                         
                         for _, v in pairs(workspace.Enemies:GetChildren()) do
+                            if not _G.KL_AutoFarm then break end
                             local eHRP = v:FindFirstChild("HumanoidRootPart")
                             local eHum = v:FindFirstChild("Humanoid")
                             if eHRP and eHum and eHum.Health > 0 then
@@ -62,18 +64,19 @@ function Module.Load(Tabs, Window, Fluent, Options)
                             end
                         end
                         
-                        if target then
+                        if target and _G.KL_AutoFarm then
                             local eHRP = target.HumanoidRootPart
                             -- TP detrás/arriba del enemigo
                             hrp.CFrame = eHRP.CFrame * CFrame.new(0, 5, 2)
                             
                             -- Atacar
                             VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                            task.wait(0.05)
+                            task.wait(0.1)
                             VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
                         end
                     end)
-                    task.wait(0.1)
+                    if not success then warn("KL AutoFarm Error: " .. tostring(err)) end
+                    task.wait(0.2)
                 end
             end)
         end
@@ -93,10 +96,12 @@ function Module.Load(Tabs, Window, Fluent, Options)
             task.spawn(function()
                 while _G.KL_KillAura do
                     pcall(function()
+                        if not _G.KL_KillAura then return end
                         local hrp = getHRP()
                         if not hrp then return end
                         
                         for _, v in pairs(workspace.Enemies:GetChildren()) do
+                            if not _G.KL_KillAura then break end
                             local eHRP = v:FindFirstChild("HumanoidRootPart")
                             if eHRP and (hrp.Position - eHRP.Position).Magnitude < 25 then
                                 VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
@@ -174,13 +179,25 @@ function Module.Load(Tabs, Window, Fluent, Options)
         Default = false,
         Callback = function(Value)
             _G.KL_Noclip = Value
-            RunService.Stepped:Connect(function()
-                if _G.KL_Noclip and getChar() then
-                    for _, v in pairs(getChar():GetDescendants()) do
-                        if v:IsA("BasePart") then v.CanCollide = false end
+            if Value then
+                _G.KL_NoclipConn = RunService.Stepped:Connect(function()
+                    if _G.KL_Noclip and getChar() then
+                        for _, v in pairs(getChar():GetDescendants()) do
+                            if v:IsA("BasePart") then v.CanCollide = false end
+                        end
+                    else
+                        if _G.KL_NoclipConn then 
+                            _G.KL_NoclipConn:Disconnect() 
+                            _G.KL_NoclipConn = nil
+                        end
                     end
+                end)
+            else
+                if _G.KL_NoclipConn then 
+                    _G.KL_NoclipConn:Disconnect() 
+                    _G.KL_NoclipConn = nil
                 end
-            end)
+            end
         end
     })
 

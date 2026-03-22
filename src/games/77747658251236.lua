@@ -38,26 +38,28 @@ function Module.Load(Tabs, Window, Fluent, Options)
             _G.SP_AutoFarm = Value
             task.spawn(function()
                 while _G.SP_AutoFarm do
-                    pcall(function()
+                    local success, err = pcall(function()
+                        if not _G.SP_AutoFarm then return end
                         local hrp = getHRP()
                         if not hrp then return end
                         
-                        -- En Sailor Piece los enemigos suelen estar en workspace.Enemies o similar
                         local enemies = workspace:FindFirstChild("Enemies") or workspace
                         for _, v in pairs(enemies:GetChildren()) do
+                            if not _G.SP_AutoFarm then break end
                             local eHRP = v:FindFirstChild("HumanoidRootPart")
                             local eHum = v:FindFirstChild("Humanoid")
                             if eHRP and eHum and eHum.Health > 0 then
                                 if (hrp.Position - eHRP.Position).Magnitude < 1000 then
                                     hrp.CFrame = eHRP.CFrame * CFrame.new(0, 5, 0)
                                     VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                                    task.wait(0.05)
+                                    task.wait(0.1)
                                     VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
                                 end
                             end
                         end
                     end)
-                    task.wait(0.1)
+                    if not success then warn("SP AutoFarm Error: " .. tostring(err)) end
+                    task.wait(0.2)
                 end
             end)
         end
