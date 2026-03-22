@@ -1,16 +1,16 @@
 --[[
-    onzeHub - Sailor Piece (Ultimate Stealth & Farm)
+    onzeHub - Sailor Piece (Ultimate Stealth & Survival)
     ID: 77747658251236
 ]]
 
 local Module = {}
 
 function Module.Load(Tabs, Window, Fluent, Options)
-    Tabs.Specific:AddSection("Guía de Leveo Rápido")
+    Tabs.Specific:AddSection("Información Navegante")
 
     Tabs.Specific:AddParagraph({
-        Title = "Consejos para subir de nivel:",
-        Content = "1. Usa el 'Hitbox Expander' para pegar de lejos.\n2. Ve a la isla de tu nivel (usa el TP de Islas).\n3. Activa 'Kill Aura' y quédate en el centro de los mobs.\n4. Reclama códigos para obtener Gemas y Rerolls."
+        Title = "Sailor Piece VIP Survival",
+        Content = "Script optimizado para no recibir daño y farmear a distancia segura."
     })
 
     -- Helpers
@@ -37,7 +37,6 @@ function Module.Load(Tabs, Window, Fluent, Options)
 
     Tabs.Specific:AddToggle("SP_StaffDetector", {
         Title = "Staff Detector",
-        Description = "Detiene todo si un moderador entra.",
         Default = true,
         Callback = function(v) _G.SP_StaffDetector = v end
     })
@@ -48,6 +47,7 @@ function Module.Load(Tabs, Window, Fluent, Options)
             if p ~= LocalPlayer and (p.UserId < 1000000 or p:GetRankInGroup(0) > 100) then 
                 _G.SP_KillAura = false
                 _G.SP_Hitbox = false
+                _G.SP_SafeMode = false
                 return false 
             end
         end
@@ -55,33 +55,36 @@ function Module.Load(Tabs, Window, Fluent, Options)
     end
 
     -- =============================================
-    -- [[ SECCIÓN: COMBATE & DISTANCIA ]]
+    -- [[ SECCIÓN: COMBATE SEGURO ]]
     -- =============================================
-    Tabs.Specific:AddSection("Combate & Alcance")
+    Tabs.Specific:AddSection("Combate & Supervivencia")
+
+    Tabs.Specific:AddToggle("SP_SafeMode", {
+        Title = "Modo Seguro (Flotar)",
+        Description = "Te mantiene suspendido en el aire sobre los enemigos para que no te peguen mientras usas el Hitbox Expander.",
+        Default = false,
+        Callback = function(v) _G.SP_SafeMode = v end
+    })
 
     Tabs.Specific:AddToggle("SP_KillAura", {
-        Title = "Kill Aura Pro",
+        Title = "Kill Aura",
         Default = false,
         Callback = function(v) _G.SP_KillAura = v end
     })
 
     Tabs.Specific:AddToggle("SP_Hitbox", {
         Title = "Hitbox Expander (Alcance)",
-        Description = "Hace que los enemigos tengan un hitbox gigante para pegarles de lejos.",
         Default = false,
         Callback = function(v) _G.SP_Hitbox = v end
     })
 
     Tabs.Specific:AddSlider("SP_HitboxSize", {
-        Title = "Tamaño del Hitbox",
-        Default = 15,
-        Min = 5,
-        Max = 50,
-        Rounding = 1,
+        Title = "Tamaño Alcance",
+        Default = 15, Min = 5, Max = 50, Rounding = 1,
         Callback = function(v) _G.SP_HitboxSize = v end
     })
 
-    -- Bucle de Combate y Hitbox
+    -- Bucle de Combate y Supervivencia
     task.spawn(function()
         while true do
             if SafeCheck() then
@@ -90,31 +93,40 @@ function Module.Load(Tabs, Window, Fluent, Options)
                     if not hrp then return end
                     
                     local enemies = workspace:FindFirstChild("Enemies") or workspace
+                    local closest = nil
+                    local minDist = 2000
+                    
                     for _, v in pairs(enemies:GetChildren()) do
                         local eHRP = v:FindFirstChild("HumanoidRootPart")
                         local eHum = v:FindFirstChild("Humanoid")
                         
                         if eHRP and eHum and eHum.Health > 0 then
-                            -- Hitbox Expander
-                            if _G.SP_Hitbox then
+                            local dist = (hrp.Position - eHRP.Position).Magnitude
+                            if dist < minDist then
+                                minDist = dist
+                                closest = v
+                            end
+                            
+                            -- Aplicar Hitbox si está cerca
+                            if _G.SP_Hitbox and dist < 200 then
                                 eHRP.Size = Vector3.new(_G.SP_HitboxSize or 15, _G.SP_HitboxSize or 15, _G.SP_HitboxSize or 15)
                                 eHRP.Transparency = 0.7
                                 eHRP.CanCollide = false
-                            else
-                                eHRP.Size = Vector3.new(2, 2, 1)
-                                eHRP.Transparency = 1
                             end
 
-                            -- Kill Aura (Afectado por distancia)
-                            if _G.SP_KillAura then
-                                local dist = (hrp.Position - eHRP.Position).Magnitude
-                                if dist < 60 then -- Distancia aumentada para aprovechar hitbox
-                                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                                    task.wait(math.random(5, 10) / 100)
-                                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-                                end
+                            -- Atacar
+                            if _G.SP_KillAura and dist < 70 then
+                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                                task.wait(0.05)
+                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
                             end
                         end
+                    end
+                    
+                    -- Si SafeMode está activo, flotar sobre el mob más cercano
+                    if _G.SP_SafeMode and closest and closest:FindFirstChild("HumanoidRootPart") then
+                        hrp.CFrame = closest.HumanoidRootPart.CFrame * CFrame.new(0, 15, 0)
+                        hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
                     end
                 end)
             end
@@ -123,9 +135,42 @@ function Module.Load(Tabs, Window, Fluent, Options)
     end)
 
     -- =============================================
-    -- [[ SECCIÓN: TELEPORT ISLAS ]]
+    -- [[ SECCIÓN: AUTO STATS ]]
     -- =============================================
-    Tabs.Specific:AddSection("Navegación (Teleport)")
+    Tabs.Specific:AddSection("Atributos (Auto Stats)")
+
+    Tabs.Specific:AddToggle("SP_AutoStat", {
+        Title = "Auto Subir Stats",
+        Default = false,
+        Callback = function(v) _G.SP_AutoStat = v end
+    })
+
+    Tabs.Specific:AddDropdown("SP_StatSelect", {
+        Title = "Priorizar Stat:",
+        Values = {"Defense", "Weapon", "Power"},
+        Default = "Defense",
+        Callback = function(v) _G.SP_StatTarget = v end
+    })
+
+    task.spawn(function()
+        while true do
+            if _G.SP_AutoStat then
+                -- Sailor Piece suele tener eventos de stats en ReplicatedStorage
+                pcall(function()
+                    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Stats", true) or game:GetService("ReplicatedStorage"):FindFirstChild("AddStats", true)
+                    if remote then
+                        remote:FireServer(_G.SP_StatTarget or "Defense", 1)
+                    end
+                end)
+            end
+            task.wait(0.5)
+        end
+    end)
+
+    -- =============================================
+    -- [[ SECCIÓN: NAVEGACIÓN ]]
+    -- =============================================
+    Tabs.Specific:AddSection("Navegación & Islas")
 
     local Islands = {
         ["Starter Island (0)"] = Vector3.new(-395, 30, 260),
@@ -143,54 +188,36 @@ function Module.Load(Tabs, Window, Fluent, Options)
     for name, _ in pairs(Islands) do table.insert(island_names, name) end
     table.sort(island_names)
 
-    Tabs.Specific:AddDropdown("SP_Islands", {
-        Title = "Viajar a:",
-        Values = island_names,
-        Default = "Starter Island (0)",
-        Callback = function(v) _G.SelectedIsland = v end
-    })
+    Tabs.Specific:AddDropdown("SP_Islands", {Title = "Seleccionar Isla", Values = island_names, Default = "Starter Island (0)", Callback = function(v) _G.SelectedIsland = v end})
 
     Tabs.Specific:AddButton({
-        Title = "Volar hacia Isla",
+        Title = "Viajar Sigilosamente",
         Callback = function()
             local pos = Islands[_G.SelectedIsland]
             local hrp = getHRP()
             if pos and hrp then
-                local dist = (hrp.Position - pos).Magnitude
-                local info = TweenInfo.new(dist/150, Enum.EasingStyle.Linear)
+                local info = TweenInfo.new((hrp.Position - pos).Magnitude/150, Enum.EasingStyle.Linear)
                 TweenService:Create(hrp, info, {CFrame = CFrame.new(pos)}):Play()
             end
         end
     })
 
     -- =============================================
-    -- [[ SECCIÓN: UTILIDADES ]]
+    -- [[ SECCIÓN: MOVIMIENTO ]]
     -- =============================================
-    Tabs.Specific:AddSection("Extras")
+    Tabs.Specific:AddSection("Movimiento VIP")
 
-    Tabs.Specific:AddButton({
-        Title = "Canjear Códigos (X2 EXP/GEMS)",
-        Callback = function()
-            local codes = {"275KCCUOMG", "260KCCUINSANE", "245KCCUGETTINGTOOCRAZY", "230KCCUYALLTHEBEST", "RESTARTSORRYYYY", "HUGEUPDATEW"}
-            for _, c in ipairs(codes) do
-                pcall(function() game:GetService("ReplicatedStorage").Code:FireServer(c) end)
-                task.wait(0.3)
-            end
-            Fluent:Notify({Title = "onzeHub", Content = "Códigos canjeados.", Duration = 3})
+    Tabs.Specific:AddToggle("SP_InfiniteGeppo", {Title = "Salto Infinito", Default = false, Callback = function(v) _G.SP_Geppo = v end})
+    Tabs.Specific:AddToggle("SP_Noclip", {Title = "Noclip", Default = false, Callback = function(v) _G.SP_Noclip = v end})
+
+    RunService.Stepped:Connect(function()
+        if _G.SP_Noclip and getChar() then
+            for _, v in pairs(getChar():GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end
         end
-    })
-
-    Tabs.Specific:AddToggle("SP_InfiniteGeppo", {
-        Title = "Salto Infinito",
-        Default = false,
-        Callback = function(v) _G.SP_Geppo = v end
-    })
+    end)
 
     game:GetService("UserInputService").JumpRequest:Connect(function()
-        if _G.SP_Geppo then
-            local hum = getHum()
-            if hum then hum:ChangeState("Jumping") end
-        end
+        if _G.SP_Geppo then if getHum() then getHum():ChangeState("Jumping") end end
     end)
 end
 
