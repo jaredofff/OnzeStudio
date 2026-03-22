@@ -34,53 +34,64 @@ function Module.Load(Tabs, Window, Fluent, Options)
     -- =============================================
     Tabs.Specific:AddSection("Auto Farm")
 
+    local function GetKLTarget()
+        local hrp = getHRP()
+        if not hrp then return nil end
+        local t = nil
+        local minDist = 2000
+        
+        -- Buscar en workspace.Enemies
+        for _, v in pairs(workspace:FindFirstChild("Enemies") and workspace.Enemies:GetChildren() or workspace:GetDescendants()) do
+            if v:IsA("Model") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                local eHRP = v:FindFirstChild("HumanoidRootPart")
+                if eHRP then
+                    local dist = (hrp.Position - eHRP.Position).Magnitude
+                    if dist < minDist then
+                        minDist = dist
+                        t = v
+                    end
+                end
+            end
+        end
+        return t
+    end
+
     Tabs.Specific:AddToggle("KL_AutoFarm", {
         Title = "Auto Farm Level (Beta)",
         Description = "Teletransporta a los enemigos y los ataca automáticamente.",
         Default = false,
         Callback = function(Value)
             _G.KL_AutoFarm = Value
-            task.spawn(function()
-                while _G.KL_AutoFarm do
-                    local success, err = pcall(function()
-                        if not _G.KL_AutoFarm then return end
-                        local hrp = getHRP()
-                        if not hrp then return end
-                        
-                        -- Buscar enemigo más cercano o por misión
-                        local target = nil
-                        local minDist = 1500 -- Rango de búsqueda
-                        
-                        for _, v in pairs(workspace.Enemies:GetChildren()) do
-                            if not _G.KL_AutoFarm then break end
-                            local eHRP = v:FindFirstChild("HumanoidRootPart")
-                            local eHum = v:FindFirstChild("Humanoid")
-                            if eHRP and eHum and eHum.Health > 0 then
-                                local dist = (hrp.Position - eHRP.Position).Magnitude
-                                if dist < minDist then
-                                    minDist = dist
-                                    target = v
-                                end
-                            end
-                        end
-                        
-                        if target and _G.KL_AutoFarm then
-                            local eHRP = target.HumanoidRootPart
-                            -- TP detrás/arriba del enemigo
-                            hrp.CFrame = eHRP.CFrame * CFrame.new(0, 5, 2)
+            if not Value then
+                local hrp = getHRP()
+                if hrp then hrp.AssemblyLinearVelocity = Vector3.new(0,0,0) end
+            end
+        end
+    })
+
+    -- Bucle único para evitar hilos fantasmas
+    task.spawn(function()
+        while true do
+            if _G.KL_AutoFarm then
+                pcall(function()
+                    local target = GetKLTarget()
+                    local hrp = getHRP()
+                    if target and hrp and _G.KL_AutoFarm then
+                        local eHRP = target:FindFirstChild("HumanoidRootPart")
+                        if eHRP then
+                            hrp.CFrame = eHRP.CFrame * CFrame.new(0, 7, 0)
+                            hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
                             
-                            -- Atacar
                             VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
                             task.wait(0.1)
                             VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
                         end
-                    end)
-                    if not success then warn("KL AutoFarm Error: " .. tostring(err)) end
-                    task.wait(0.2)
-                end
-            end)
+                    end
+                end)
+            end
+            task.wait(0.1)
         end
-    })
+    end)
 
     -- =============================================
     -- [[ SECCIÓN: COMBATE ]]
@@ -89,32 +100,33 @@ function Module.Load(Tabs, Window, Fluent, Options)
 
     Tabs.Specific:AddToggle("KL_KillAura", {
         Title = "Kill Aura Premium",
-        Description = "Ataca a todo lo que esté cerca automáticamente.",
         Default = false,
         Callback = function(Value)
             _G.KL_KillAura = Value
-            task.spawn(function()
-                while _G.KL_KillAura do
-                    pcall(function()
-                        if not _G.KL_KillAura then return end
-                        local hrp = getHRP()
-                        if not hrp then return end
-                        
-                        for _, v in pairs(workspace.Enemies:GetChildren()) do
-                            if not _G.KL_KillAura then break end
-                            local eHRP = v:FindFirstChild("HumanoidRootPart")
-                            if eHRP and (hrp.Position - eHRP.Position).Magnitude < 25 then
-                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                                task.wait(0.01)
-                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-                            end
-                        end
-                    end)
-                    task.wait(0.1)
-                end
-            end)
         end
     })
+
+    -- Bucle Kill Aura único
+    task.spawn(function()
+        while true do
+            if _G.KL_KillAura then
+                pcall(function()
+                    local hrp = getHRP()
+                    if not hrp then return end
+                    for _, v in pairs(workspace:FindFirstChild("Enemies") and workspace.Enemies:GetChildren() or {}) do
+                        if not _G.KL_KillAura then break end
+                        local eHRP = v:FindFirstChild("HumanoidRootPart")
+                        if eHRP and (hrp.Position - eHRP.Position).Magnitude < 25 then
+                            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                            task.wait(0.01)
+                            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                        end
+                    end
+                end)
+            end
+            task.wait(0.1)
+        end
+    end)
 
     -- =============================================
     -- [[ SECCIÓN: VISUALES ]]
@@ -123,12 +135,21 @@ function Module.Load(Tabs, Window, Fluent, Options)
 
     Tabs.Specific:AddToggle("KL_FruitESP", {
         Title = "ESP de Frutas (Auto)",
-        Description = "Muestra y avisa cuando aparece una fruta.",
         Default = false,
         Callback = function(Value)
             _G.KL_FruitESP = Value
-            task.spawn(function()
-                while _G.KL_FruitESP do
+            if not Value then
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v:FindFirstChild("onze_esp") then v:FindFirstChild("onze_esp"):Destroy() end
+                end
+            end
+        end
+    })
+
+    task.spawn(function()
+        while true do
+            if _G.KL_FruitESP then
+                pcall(function()
                     for _, v in pairs(workspace:GetDescendants()) do
                         if v:IsA("Model") and string.find(string.lower(v.Name), "fruit") then
                             if not v:FindFirstChild("onze_esp") then
@@ -140,11 +161,11 @@ function Module.Load(Tabs, Window, Fluent, Options)
                             end
                         end
                     end
-                    task.wait(3)
-                end
-            end)
+                end)
+            end
+            task.wait(4)
         end
-    })
+    end)
 
     -- =============================================
     -- [[ SECCIÓN: MOVIMIENTO ]]
@@ -152,54 +173,35 @@ function Module.Load(Tabs, Window, Fluent, Options)
     Tabs.Specific:AddSection("Movimiento VIP")
 
     Tabs.Specific:AddToggle("KL_InfJump", {
-        Title = "Geppo Infinito (Sky Jump)",
-        Description = "Salta en el aire sin límites.",
+        Title = "Geppo Infinito",
         Default = false,
         Callback = function(Value)
             _G.KL_InfJump = Value
-            LocalPlayer.CharacterAdded:Connect(function() -- Re-conectar al morir
-                if _G.KL_InfJump then
-                    game:GetService("UserInputService").JumpRequest:Connect(function()
-                        if _G.KL_InfJump then getHum():ChangeState("Jumping") end
-                    end)
-                end
-            end)
-            -- Inicial
-            game:GetService("UserInputService").JumpRequest:Connect(function()
-                if _G.KL_InfJump then 
-                    local hum = getHum()
-                    if hum then hum:ChangeState("Jumping") end
-                end
-            end)
         end
     })
 
+    game:GetService("UserInputService").JumpRequest:Connect(function()
+        if _G.KL_InfJump then
+            local hum = getHum()
+            if hum then hum:ChangeState("Jumping") end
+        end
+    end)
+
     Tabs.Specific:AddToggle("KL_Noclip", {
-        Title = "Noclip (Atravesar Paredes)",
+        Title = "Noclip",
         Default = false,
         Callback = function(Value)
             _G.KL_Noclip = Value
-            if Value then
-                _G.KL_NoclipConn = RunService.Stepped:Connect(function()
-                    if _G.KL_Noclip and getChar() then
-                        for _, v in pairs(getChar():GetDescendants()) do
-                            if v:IsA("BasePart") then v.CanCollide = false end
-                        end
-                    else
-                        if _G.KL_NoclipConn then 
-                            _G.KL_NoclipConn:Disconnect() 
-                            _G.KL_NoclipConn = nil
-                        end
-                    end
-                end)
-            else
-                if _G.KL_NoclipConn then 
-                    _G.KL_NoclipConn:Disconnect() 
-                    _G.KL_NoclipConn = nil
-                end
-            end
         end
     })
+
+    RunService.Stepped:Connect(function()
+        if _G.KL_Noclip and getChar() then
+            for _, v in pairs(getChar():GetDescendants()) do
+                if v:IsA("BasePart") then v.CanCollide = false end
+            end
+        end
+    end)
 
     -- =============================================
     -- [[ SECCIÓN: UTILIDADES ]]
@@ -208,7 +210,6 @@ function Module.Load(Tabs, Window, Fluent, Options)
 
     Tabs.Specific:AddButton({
         Title = "Canjear Códigos (Todos)",
-        Description = "Canjea automáticamente los mejores códigos de Marzo 2026.",
         Callback = function()
             local codes = {
                 "FIXEDBUG1003", "Serpent10", "FreePterSpin", "Update10Release",

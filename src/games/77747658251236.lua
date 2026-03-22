@@ -30,47 +30,73 @@ function Module.Load(Tabs, Window, Fluent, Options)
     -- =============================================
     Tabs.Specific:AddSection("Auto Farm")
 
+    local function GetClosestEnemy()
+        local hrp = getHRP()
+        if not hrp then return nil end
+        local target = nil
+        local minDist = 2000
+        
+        local enemies = workspace:FindFirstChild("Enemies") or workspace
+        for _, v in pairs(enemies:GetChildren()) do
+            local eHRP = v:FindFirstChild("HumanoidRootPart")
+            local eHum = v:FindFirstChild("Humanoid")
+            if eHRP and eHum and eHum.Health > 0 then
+                local dist = (hrp.Position - eHRP.Position).Magnitude
+                if dist < minDist then
+                    minDist = dist
+                    target = v
+                end
+            end
+        end
+        return target
+    end
+
     Tabs.Specific:AddToggle("SP_AutoFarm", {
         Title = "Auto Farm (Enemigos)",
         Description = "Ataca y farmea a los enemigos automáticamente.",
         Default = false,
         Callback = function(Value)
             _G.SP_AutoFarm = Value
-            task.spawn(function()
-                while _G.SP_AutoFarm do
-                    local success, err = pcall(function()
-                        if not _G.SP_AutoFarm then return end
-                        local hrp = getHRP()
-                        if not hrp then return end
-                        
-                        local enemies = workspace:FindFirstChild("Enemies") or workspace
-                        for _, v in pairs(enemies:GetChildren()) do
-                            if not _G.SP_AutoFarm then break end
-                            local eHRP = v:FindFirstChild("HumanoidRootPart")
-                            local eHum = v:FindFirstChild("Humanoid")
-                            if eHRP and eHum and eHum.Health > 0 then
-                                if (hrp.Position - eHRP.Position).Magnitude < 1000 then
-                                    hrp.CFrame = eHRP.CFrame * CFrame.new(0, 5, 0)
-                                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                                    task.wait(0.1)
-                                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-                                end
-                            end
-                        end
-                    end)
-                    if not success then warn("SP AutoFarm Error: " .. tostring(err)) end
-                    task.wait(0.2)
-                end
-            end)
+            if not Value then
+                -- Forzar limpieza de velocidad al apagar
+                local hrp = getHRP()
+                if hrp then hrp.AssemblyLinearVelocity = Vector3.new(0,0,0) end
+            end
         end
     })
+
+    -- Bucle único persistente para evitar duplicación de hilos
+    task.spawn(function()
+        while true do
+            if _G.SP_AutoFarm then
+                pcall(function()
+                    local hrp = getHRP()
+                    local target = GetClosestEnemy()
+                    
+                    if target and hrp and _G.SP_AutoFarm then
+                        local eHRP = target:FindFirstChild("HumanoidRootPart")
+                        if eHRP then
+                            -- Teletransporte suave (arriba del enemigo)
+                            hrp.CFrame = eHRP.CFrame * CFrame.new(0, 7, 0)
+                            hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                            
+                            -- Ataque
+                            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                            task.wait(0.1)
+                            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                        end
+                    end
+                end)
+            end
+            task.wait(0.1)
+        end
+    end)
 
     -- =============================================
     -- [[ SECCIÓN: UTILIDADES ]]
     -- =============================================
     Tabs.Specific:AddSection("Utilidades Pirata")
 
-    -- Canjear Códigos
     Tabs.Specific:AddButton({
         Title = "Canjear Códigos Activos (Marzo 2026)",
         Description = "Canjea +20 códigos de rewards masivos ($ Cash, Gems, Rerolls).",
@@ -87,7 +113,6 @@ function Module.Load(Tabs, Window, Fluent, Options)
                 local rs = game:GetService("ReplicatedStorage")
                 for _, c in ipairs(codes) do
                     pcall(function()
-                        -- Sailor Piece suele usar un RemoteEvent en RS para códigos
                         local remote = rs:FindFirstChild("Code", true) or rs:FindFirstChild("Redeem", true)
                         if remote then
                             if remote:IsA("RemoteEvent") then remote:FireServer(c)
@@ -96,7 +121,7 @@ function Module.Load(Tabs, Window, Fluent, Options)
                     end)
                     task.wait(0.5)
                 end
-                Fluent:Notify({Title = "Sailor Piece", Content = "Proceso terminado. Algunos códigos requieren nivel alto.", Duration = 4})
+                Fluent:Notify({Title = "Sailor Piece", Content = "Proceso terminado.", Duration = 4})
             end)
         end
     })
@@ -108,7 +133,9 @@ function Module.Load(Tabs, Window, Fluent, Options)
             _G.SP_Geppo = Value
             game:GetService("UserInputService").JumpRequest:Connect(function()
                 if _G.SP_Geppo then
-                    LocalPlayer.Character.Humanoid:ChangeState("Jumping")
+                    local char = getChar()
+                    local hum = char and char:FindFirstChild("Humanoid")
+                    if hum then hum:ChangeState("Jumping") end
                 end
             end)
         end
