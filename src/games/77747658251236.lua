@@ -1,16 +1,16 @@
 --[[
-    onzeHub - Sailor Piece (Premium & Stealth)
+    onzeHub - Sailor Piece (Ultimate Stealth & Farm)
     ID: 77747658251236
 ]]
 
 local Module = {}
 
 function Module.Load(Tabs, Window, Fluent, Options)
-    Tabs.Specific:AddSection("Información Navegante")
+    Tabs.Specific:AddSection("Guía de Leveo Rápido")
 
     Tabs.Specific:AddParagraph({
-        Title = "Sailor Piece Premium v3",
-        Content = "Script optimizado para farmear sin ser detectado. Incluye Anti-Staff y Teleport a islas."
+        Title = "Consejos para subir de nivel:",
+        Content = "1. Usa el 'Hitbox Expander' para pegar de lejos.\n2. Ve a la isla de tu nivel (usa el TP de Islas).\n3. Activa 'Kill Aura' y quédate en el centro de los mobs.\n4. Reclama códigos para obtener Gemas y Rerolls."
     })
 
     -- Helpers
@@ -33,170 +33,157 @@ function Module.Load(Tabs, Window, Fluent, Options)
     -- =============================================
     -- [[ SECCIÓN: ANTI-STAFF ]]
     -- =============================================
-    Tabs.Specific:AddSection("Seguridad Avanzada")
+    Tabs.Specific:AddSection("Seguridad (Anti-Staff)")
 
     Tabs.Specific:AddToggle("SP_StaffDetector", {
-        Title = "Detector de Moderadores",
-        Description = "Te avisa si un staff entra y detiene todas las funciones automáticas.",
+        Title = "Staff Detector",
+        Description = "Detiene todo si un moderador entra.",
         Default = true,
-        Callback = function(Value) _G.SP_StaffDetector = Value end
+        Callback = function(v) _G.SP_StaffDetector = v end
     })
 
     local function SafeCheck()
         if not _G.SP_StaffDetector then return true end
         for _, p in pairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer then
-                -- Detección por ID baja o Tags comunes
-                if p.UserId < 1000000 or p:GetRankInGroup(0) > 100 then 
-                    _G.SP_KillAura = false
-                    _G.SP_AutoFarm = false
-                    Fluent:Notify({Title = "❗ STAFF DETECTADO", Content = "Pausando script por seguridad. Jugador: " .. p.Name, Duration = 10})
-                    return false 
-                end
+            if p ~= LocalPlayer and (p.UserId < 1000000 or p:GetRankInGroup(0) > 100) then 
+                _G.SP_KillAura = false
+                _G.SP_Hitbox = false
+                return false 
             end
         end
         return true
     end
 
     -- =============================================
-    -- [[ SECCIÓN: TELEPORT A ISLAS ]]
+    -- [[ SECCIÓN: COMBATE & DISTANCIA ]]
     -- =============================================
-    Tabs.Specific:AddSection("Teletransportes del Mundo")
+    Tabs.Specific:AddSection("Combate & Alcance")
+
+    Tabs.Specific:AddToggle("SP_KillAura", {
+        Title = "Kill Aura Pro",
+        Default = false,
+        Callback = function(v) _G.SP_KillAura = v end
+    })
+
+    Tabs.Specific:AddToggle("SP_Hitbox", {
+        Title = "Hitbox Expander (Alcance)",
+        Description = "Hace que los enemigos tengan un hitbox gigante para pegarles de lejos.",
+        Default = false,
+        Callback = function(v) _G.SP_Hitbox = v end
+    })
+
+    Tabs.Specific:AddSlider("SP_HitboxSize", {
+        Title = "Tamaño del Hitbox",
+        Default = 15,
+        Min = 5,
+        Max = 50,
+        Rounding = 1,
+        Callback = function(v) _G.SP_HitboxSize = v end
+    })
+
+    -- Bucle de Combate y Hitbox
+    task.spawn(function()
+        while true do
+            if SafeCheck() then
+                pcall(function()
+                    local hrp = getHRP()
+                    if not hrp then return end
+                    
+                    local enemies = workspace:FindFirstChild("Enemies") or workspace
+                    for _, v in pairs(enemies:GetChildren()) do
+                        local eHRP = v:FindFirstChild("HumanoidRootPart")
+                        local eHum = v:FindFirstChild("Humanoid")
+                        
+                        if eHRP and eHum and eHum.Health > 0 then
+                            -- Hitbox Expander
+                            if _G.SP_Hitbox then
+                                eHRP.Size = Vector3.new(_G.SP_HitboxSize or 15, _G.SP_HitboxSize or 15, _G.SP_HitboxSize or 15)
+                                eHRP.Transparency = 0.7
+                                eHRP.CanCollide = false
+                            else
+                                eHRP.Size = Vector3.new(2, 2, 1)
+                                eHRP.Transparency = 1
+                            end
+
+                            -- Kill Aura (Afectado por distancia)
+                            if _G.SP_KillAura then
+                                local dist = (hrp.Position - eHRP.Position).Magnitude
+                                if dist < 60 then -- Distancia aumentada para aprovechar hitbox
+                                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                                    task.wait(math.random(5, 10) / 100)
+                                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+            task.wait(0.1)
+        end
+    end)
+
+    -- =============================================
+    -- [[ SECCIÓN: TELEPORT ISLAS ]]
+    -- =============================================
+    Tabs.Specific:AddSection("Navegación (Teleport)")
 
     local Islands = {
-        ["Starter Island"] = Vector3.new(-395, 30, 260),
-        ["Sailor Island"] = Vector3.new(1250, 40, -1800),
-        ["Jungle Island"] = Vector3.new(-2500, 50, -450),
-        ["Desert Island"] = Vector3.new(4200, 60, 1100),
-        ["Snow Island"] = Vector3.new(-800, 70, 5500),
-        ["Dungeon Island"] = Vector3.new(6500, 80, -3200),
-        ["Boss Island"] = Vector3.new(-5000, 40, -4500),
-        ["Shibuya Station"] = Vector3.new(8200, 90, 5800),
-        ["Hueco Mundo"] = Vector3.new(-9500, 100, 2000),
-        ["Judgement Island"] = Vector3.new(11000, 50, -1200)
+        ["Starter Island (0)"] = Vector3.new(-395, 30, 260),
+        ["Sailor Island (0)"] = Vector3.new(1250, 40, -1800),
+        ["Jungle Island (250)"] = Vector3.new(-2500, 50, -450),
+        ["Desert Island (750)"] = Vector3.new(4200, 60, 1100),
+        ["Snow Island (1500)"] = Vector3.new(-800, 70, 5500),
+        ["Dungeon Island (1000)"] = Vector3.new(6500, 80, -3200),
+        ["Shibuya Station (3000)"] = Vector3.new(8200, 90, 5800),
+        ["Hueco Mundo (5000)"] = Vector3.new(-9500, 100, 2000),
+        ["Judgement Island (7500)"] = Vector3.new(11000, 50, -1200)
     }
 
     local island_names = {}
     for name, _ in pairs(Islands) do table.insert(island_names, name) end
     table.sort(island_names)
 
-    local IslandDropdown = Tabs.Specific:AddDropdown("SP_Islands", {
-        Title = "Seleccionar Isla",
+    Tabs.Specific:AddDropdown("SP_Islands", {
+        Title = "Viajar a:",
         Values = island_names,
-        Default = "Starter Island",
-        Callback = function(Value)
-            _G.SelectedIsland = Value
-        end
+        Default = "Starter Island (0)",
+        Callback = function(v) _G.SelectedIsland = v end
     })
 
     Tabs.Specific:AddButton({
-        Title = "Viajar a Isla Seleccionada (Sigiloso)",
-        Description = "Usa Tween para viajar de forma natural y evitar detecciones de TP.",
+        Title = "Volar hacia Isla",
         Callback = function()
             local pos = Islands[_G.SelectedIsland]
             local hrp = getHRP()
             if pos and hrp then
                 local dist = (hrp.Position - pos).Magnitude
-                local info = TweenInfo.new(dist/120, Enum.EasingStyle.Linear)
-                local tween = TweenService:Create(hrp, info, {CFrame = CFrame.new(pos)})
-                tween:Play()
-                Fluent:Notify({Title = "Navegando", Content = "Viajando hacia " .. _G.SelectedIsland, Duration = 3})
+                local info = TweenInfo.new(dist/150, Enum.EasingStyle.Linear)
+                TweenService:Create(hrp, info, {CFrame = CFrame.new(pos)}):Play()
             end
         end
     })
-
-    -- =============================================
-    -- [[ SECCIÓN: COMBATE STEALTH ]]
-    -- =============================================
-    Tabs.Specific:AddSection("Combate de Élite")
-
-    Tabs.Specific:AddToggle("SP_KillAura", {
-        Title = "Kill Aura Legítimo",
-        Description = "Ataca a enemigos cercanos con intervalos humanos para evitar bans.",
-        Default = false,
-        Callback = function(Value) _G.SP_KillAura = Value end
-    })
-
-    Tabs.Specific:AddToggle("SP_AutoEquip", {
-        Title = "Auto Equipar Arma",
-        Default = true,
-        Callback = function(Value) _G.SP_AutoEquip = Value end
-    })
-
-    -- Bucle único persistente (Más seguro y eficiente)
-    task.spawn(function()
-        while true do
-            if _G.SP_KillAura and SafeCheck() then
-                pcall(function()
-                    local hrp = getHRP()
-                    if not hrp then return end
-                    
-                    -- Equipar arma si no hay nada en la mano
-                    if _G.SP_AutoEquip and not getChar():FindFirstChildOfClass("Tool") then
-                        for _, t in pairs(LocalPlayer.Backpack:GetChildren()) do
-                            if t:IsA("Tool") then t.Parent = getChar(); break end
-                        end
-                    end
-
-                    -- Buscar enemigos
-                    local enemies = workspace:FindFirstChild("Enemies") or workspace
-                    for _, v in pairs(enemies:GetChildren()) do
-                        if not _G.SP_KillAura then break end
-                        local eHRP = v:FindFirstChild("HumanoidRootPart")
-                        local eHum = v:FindFirstChild("Humanoid")
-                        if eHRP and eHum and eHum.Health > 0 then
-                            if (hrp.Position - eHRP.Position).Magnitude < 45 then
-                                -- Click rítmico no robótico
-                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                                task.wait(math.random(6, 15) / 100)
-                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-                            end
-                        end
-                    end
-                end)
-            end
-            task.wait(math.random(1, 3) / 10) -- Espera variable entre 0.1 y 0.3s
-        end
-    end)
 
     -- =============================================
     -- [[ SECCIÓN: UTILIDADES ]]
     -- =============================================
-    Tabs.Specific:AddSection("Utilidades Pirata")
+    Tabs.Specific:AddSection("Extras")
 
     Tabs.Specific:AddButton({
-        Title = "Canjear Códigos (Todos)",
-        Description = "Códigos de Marzo 2026 actualizados.",
+        Title = "Canjear Códigos (X2 EXP/GEMS)",
         Callback = function()
-            local codes = {
-                "275KCCUOMG", "260KCCUINSANE", "245KCCUGETTINGTOOCRAZY", "230KCCUYALLTHEBEST",
-                "TYFOR215KCCU", "THEBIG200KCCUTYSM", "OMG190KCCU", "INSANE180KCCU",
-                "TYFOR170KCCUWOW", "EIDMUBARAK", "RESTARTSORRYYYY", "45KFOLLOWSTYY",
-                "SMALLDELAYVERYSORRY", "BIGGESTUPDATENEXT", "ALTERUPDATE", "HUGEUPDATEW",
-                "3SPECS", "BOSSRUSH", "VERYBIGUPDATESOON", "SINOFPRIDE"
-            }
-            Fluent:Notify({Title = "Sailor Piece", Content = "Canjeando códigos...", Duration = 3})
-            task.spawn(function()
-                local rs = game:GetService("ReplicatedStorage")
-                for _, c in ipairs(codes) do
-                    pcall(function()
-                        local remote = rs:FindFirstChild("Code", true) or rs:FindFirstChild("Redeem", true)
-                        if remote then
-                            if remote:IsA("RemoteEvent") then remote:FireServer(c)
-                            elseif remote:IsA("RemoteFunction") then remote:InvokeServer(c) end
-                        end
-                    end)
-                    task.wait(0.5)
-                end
-                Fluent:Notify({Title = "Sailor Piece", Content = "Proceso terminado.", Duration = 4})
-            end)
+            local codes = {"275KCCUOMG", "260KCCUINSANE", "245KCCUGETTINGTOOCRAZY", "230KCCUYALLTHEBEST", "RESTARTSORRYYYY", "HUGEUPDATEW"}
+            for _, c in ipairs(codes) do
+                pcall(function() game:GetService("ReplicatedStorage").Code:FireServer(c) end)
+                task.wait(0.3)
+            end
+            Fluent:Notify({Title = "onzeHub", Content = "Códigos canjeados.", Duration = 3})
         end
     })
 
     Tabs.Specific:AddToggle("SP_InfiniteGeppo", {
-        Title = "Infinite Sky Jump",
+        Title = "Salto Infinito",
         Default = false,
-        Callback = function(Value) _G.SP_Geppo = Value end
+        Callback = function(v) _G.SP_Geppo = v end
     })
 
     game:GetService("UserInputService").JumpRequest:Connect(function()
