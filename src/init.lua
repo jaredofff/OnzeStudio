@@ -101,7 +101,8 @@ local function InitHub()
         [117090155680637] = "Rusty Rafts",
         [105555311806207] = "Build a Zoo",
         [4520749081] = "King Legacy",
-        [77747658251236] = "Sailor Piece"
+        [77747658251236] = "Sailor Piece",
+        [79244238995921] = "Steal Eggs from Goose!"
     }
 
     local CurrentGameName = GameSupport[GameID]
@@ -247,6 +248,12 @@ local function InitHub()
         Title = "Cargar: Sailor Piece", 
         Callback = function() 
             LoadModule(77747658251236, "Sailor Piece") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Steal Eggs from Goose!", 
+        Callback = function() 
+            LoadModule(79244238995921, "Steal Eggs from Goose!") 
         end
     })
 
