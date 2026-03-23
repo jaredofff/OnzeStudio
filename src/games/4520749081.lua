@@ -55,9 +55,10 @@ function Module.Load(Tabs, Window, Fluent, Options)
                         if v:IsA("Model") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
                             local eHRP = v:FindFirstChild("HumanoidRootPart")
                             if eHRP and (hrp.Position - eHRP.Position).Magnitude < 40 then
-                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                                task.wait(0.1)
-                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                                local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+                            VirtualInputManager:SendMouseButtonEvent(mousePos.X, mousePos.Y, 0, true, game, 0)
+                            task.wait(0.1)
+                            VirtualInputManager:SendMouseButtonEvent(mousePos.X, mousePos.Y, 0, false, game, 0)
                             end
                         end
                     end

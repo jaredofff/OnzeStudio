@@ -116,9 +116,11 @@ function Module.Load(Tabs, Window, Fluent, Options)
 
                             -- Atacar
                             if _G.SP_KillAura and dist < 70 then
-                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                                task.wait(0.05)
-                                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                                -- Click rítmico no robótico (Usando posición actual del mouse para no bloquear el Hub)
+                                local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+                                VirtualInputManager:SendMouseButtonEvent(mousePos.X, mousePos.Y, 0, true, game, 0)
+                                task.wait(math.random(5, 10) / 100)
+                                VirtualInputManager:SendMouseButtonEvent(mousePos.X, mousePos.Y, 0, false, game, 0)
                             end
                         end
                     end
