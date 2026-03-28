@@ -102,7 +102,8 @@ local function InitHub()
         [105555311806207] = "Build a Zoo",
         [4520749081] = "King Legacy",
         [77747658251236] = "Sailor Piece",
-        [79244238995921] = "Steal Eggs from Goose!"
+        [79244238995921] = "Steal Eggs from Goose!",
+        [120073741652089] = "Boulder Creek"
     }
 
     local CurrentGameName = GameSupport[GameID]
@@ -254,6 +255,12 @@ local function InitHub()
         Title = "Cargar: Steal Eggs from Goose!", 
         Callback = function() 
             LoadModule(79244238995921, "Steal Eggs from Goose!") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Boulder Creek", 
+        Callback = function() 
+            LoadModule(120073741652089, "Boulder Creek") 
         end
     })
 
