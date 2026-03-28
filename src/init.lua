@@ -114,6 +114,11 @@ local function InitHub()
         GameID = 75663528075786
     end
 
+    if not CurrentGameName and (CheckName(GameInfo.Name, "hunting season") or CheckName(GameInfo.Name, "boulder")) then
+        CurrentGameName = "Boulder Creek"
+        GameID = 120073741652089
+    end
+
     if CurrentGameName == "Racket rivals" then
         GameID = 134933804107672
     end
@@ -167,6 +172,9 @@ local function InitHub()
         end)
         
         if success and mod then
+            if not Tabs.Specific then
+                Tabs.Specific = Window:AddTab({ Title = name, Icon = "zap" })
+            end
             pcall(function() 
                 mod.Load(Tabs, Window, Fluent, Options) 
             end)
