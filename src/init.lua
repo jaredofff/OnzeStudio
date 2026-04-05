@@ -103,7 +103,8 @@ local function InitHub()
         [4520749081] = "King Legacy",
         [77747658251236] = "Sailor Piece",
         [79244238995921] = "Steal Eggs from Goose!",
-        [120073741652089] = "Boulder Creek"
+        [120073741652089] = "Boulder Creek",
+        [138161219313147] = "Unbox a Factory"
     }
 
     local CurrentGameName = GameSupport[GameID]
@@ -269,6 +270,12 @@ local function InitHub()
         Title = "Cargar: Boulder Creek", 
         Callback = function() 
             LoadModule(120073741652089, "Boulder Creek") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Unbox a Factory", 
+        Callback = function() 
+            LoadModule(138161219313147, "Unbox a Factory") 
         end
     })
 
