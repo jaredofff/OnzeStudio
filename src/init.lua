@@ -129,6 +129,10 @@ local function InitHub()
         GameID = 9748721976
     end
 
+    if CurrentGameName == "Unbox a Factory" then
+        GameID = 138161219313147
+    end
+
     CurrentGameName = CurrentGameName or "Universal"
 
     -- Crear Pestañas Reales
