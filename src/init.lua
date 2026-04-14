@@ -104,7 +104,10 @@ local function InitHub()
         [77747658251236] = "Sailor Piece",
         [79244238995921] = "Steal Eggs from Goose!",
         [120073741652089] = "Boulder Creek",
-        [138161219313147] = "Unbox a Factory"
+        [138161219313147] = "Unbox a Factory",
+        [90148635862803] = "Sobrevive al Apocalipsis",
+        [116139828947259] = "Sobrevive al Apocalipsis",
+        [113604074601559] = "Build A Beehive"
     }
 
     local CurrentGameName = GameSupport[GameID]
@@ -131,6 +134,20 @@ local function InitHub()
 
     if CurrentGameName == "Unbox a Factory" then
         GameID = 138161219313147
+    end
+
+    if CurrentGameName == "Sobrevive al Apocalipsis" then
+        GameID = 90148635862803
+    end
+
+    if not CurrentGameName and (CheckName(GameInfo.Name, "sobrevive") or CheckName(GameInfo.Name, "apocalipsis")) then
+        CurrentGameName = "Sobrevive al Apocalipsis"
+        GameID = 90148635862803
+    end
+
+    if not CurrentGameName and CheckName(GameInfo.Name, "beehive") then
+        CurrentGameName = "Build A Beehive"
+        GameID = 113604074601559
     end
 
     CurrentGameName = CurrentGameName or "Universal"
@@ -280,6 +297,18 @@ local function InitHub()
         Title = "Cargar: Unbox a Factory", 
         Callback = function() 
             LoadModule(138161219313147, "Unbox a Factory") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Build A Beehive", 
+        Callback = function() 
+            LoadModule(113604074601559, "Build A Beehive") 
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: Sobrevive al Apocalipsis", 
+        Callback = function() 
+            LoadModule(90148635862803, "Sobrevive al Apocalipsis") 
         end
     })
 
