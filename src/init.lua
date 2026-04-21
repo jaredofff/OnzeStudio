@@ -37,7 +37,7 @@ if getrawmetatable and setreadonly and newcclosure then
     local RawMetatable = getrawmetatable(game)
     local OldIndex = RawMetatable.__index
     local OldNamecall = RawMetatable.__namecall
-    
+
     setreadonly(RawMetatable, false)
 
     -- Spoofing avanzado: Evita que el juego detecte que tu WalkSpeed es mayor a 16
@@ -107,7 +107,8 @@ local function InitHub()
         [138161219313147] = "Unbox a Factory",
         [90148635862803] = "Sobrevive al Apocalipsis",
         [116139828947259] = "Sobrevive al Apocalipsis",
-        [113604074601559] = "Build A Beehive"
+        [113604074601559] = "Build A Beehive",
+        [93853815957083] = "AFILADO - PROFESIONAL"
     }
 
     local CurrentGameName = GameSupport[GameID]
@@ -150,26 +151,31 @@ local function InitHub()
         GameID = 113604074601559
     end
 
+    if not CurrentGameName and CheckName(GameInfo.Name, "afiliado") then
+        CurrentGameName = "AFILADO - PROFESIONAL"
+        GameID = 93853815957083
+    end
+
     CurrentGameName = CurrentGameName or "Universal"
 
     -- Crear Pestañas Reales
     Tabs.Main = Window:AddTab({ Title = "Inicio", Icon = "home" })
     Tabs.Universal = Window:AddTab({ Title = "Universal", Icon = "globe" })
     Tabs.Games = Window:AddTab({ Title = "Juegos", Icon = "layout-grid" })
-    
+
     if CurrentGameName ~= "Universal" then
         Tabs.Specific = Window:AddTab({ Title = CurrentGameName, Icon = "zap" })
     end
-    
+
     Tabs.Settings = Window:AddTab({ Title = "Ajustes", Icon = "settings" })
 
     -- Lógica de inicio
     Tabs.Main:AddParagraph({
         Title = "onzeHub: Premium",
-        Content = string.format("Acceso concedido para: %s\nID Usuario: %d\nID Juego: %d\nNombre Juego: %s", 
-            game.Players.LocalPlayer.Name, 
-            game.Players.LocalPlayer.UserId, 
-            game.PlaceId, 
+        Content = string.format("Acceso concedido para: %s\nID Usuario: %d\nID Juego: %d\nNombre Juego: %s",
+            game.Players.LocalPlayer.Name,
+            game.Players.LocalPlayer.UserId,
+            game.PlaceId,
             GameInfo.Name or "Universal"
         )
     })
@@ -188,17 +194,17 @@ local function InitHub()
     local function LoadModule(id, name)
         local idStr = string.format("%.0f", id)
         local url = "https://raw.githubusercontent.com/jaredofff/OnzeStudio/main/src/games/" .. idStr .. ".lua?t=" .. os.time()
-        
-        local success, mod = pcall(function() 
-            return loadstring(game:HttpGet(url))() 
+
+        local success, mod = pcall(function()
+            return loadstring(game:HttpGet(url))()
         end)
-        
+
         if success and mod then
             if not Tabs.Specific then
                 Tabs.Specific = Window:AddTab({ Title = name, Icon = "zap" })
             end
-            pcall(function() 
-                mod.Load(Tabs, Window, Fluent, Options) 
+            pcall(function()
+                mod.Load(Tabs, Window, Fluent, Options)
             end)
             Fluent:Notify({Title = "onzeHub", Content = "✓ " .. name .. " cargado correctamente.", Duration = 4})
         else
@@ -207,127 +213,133 @@ local function InitHub()
         end
     end
 
-    if Tabs.Specific then 
+    if Tabs.Specific then
         task.spawn(function()
-            LoadModule(GameID, CurrentGameName) 
+            LoadModule(GameID, CurrentGameName)
         end)
     end
 
     -- [[ PESTAÑA JUEGOS (MANUAL) ]]
     Tabs.Games:AddSection("Soportados Oficialmente")
     Tabs.Games:AddButton({
-        Title = "Cargar: Brookhaven", 
-        Callback = function() 
-            LoadModule(492414410, "Brookhaven") 
+        Title = "Cargar: Brookhaven",
+        Callback = function()
+            LoadModule(492414410, "Brookhaven")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Dragon Master", 
-        Callback = function() 
-            LoadModule(75663528075786, "Dragon Master") 
+        Title = "Cargar: Dragon Master",
+        Callback = function()
+            LoadModule(75663528075786, "Dragon Master")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Overkill", 
-        Callback = function() 
-            LoadModule(101878803733802, "Overkill") 
+        Title = "Cargar: Overkill",
+        Callback = function()
+            LoadModule(101878803733802, "Overkill")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Racket rivals", 
-        Callback = function() 
-            LoadModule(134933804107672, "Racket rivals") 
+        Title = "Cargar: Racket rivals",
+        Callback = function()
+            LoadModule(134933804107672, "Racket rivals")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Abyss", 
-        Callback = function() 
-            LoadModule(127794225497302, "Abyss") 
+        Title = "Cargar: Abyss",
+        Callback = function()
+            LoadModule(127794225497302, "Abyss")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Poppy Playtime", 
-        Callback = function() 
-            LoadModule(9748721976, "Poppy Playtime") 
+        Title = "Cargar: Poppy Playtime",
+        Callback = function()
+            LoadModule(9748721976, "Poppy Playtime")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Bedwars", 
-        Callback = function() 
-            LoadModule(6872265039, "Bedwars") 
+        Title = "Cargar: Bedwars",
+        Callback = function()
+            LoadModule(6872265039, "Bedwars")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Rusty Rafts", 
-        Callback = function() 
-            LoadModule(117090155680637, "Rusty Rafts") 
+        Title = "Cargar: Rusty Rafts",
+        Callback = function()
+            LoadModule(117090155680637, "Rusty Rafts")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Build a Zoo", 
-        Callback = function() 
-            LoadModule(105555311806207, "Build a Zoo") 
+        Title = "Cargar: Build a Zoo",
+        Callback = function()
+            LoadModule(105555311806207, "Build a Zoo")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: King Legacy", 
-        Callback = function() 
-            LoadModule(4520749081, "King Legacy") 
+        Title = "Cargar: King Legacy",
+        Callback = function()
+            LoadModule(4520749081, "King Legacy")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Sailor Piece", 
-        Callback = function() 
-            LoadModule(77747658251236, "Sailor Piece") 
+        Title = "Cargar: Sailor Piece",
+        Callback = function()
+            LoadModule(77747658251236, "Sailor Piece")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Steal Eggs from Goose!", 
-        Callback = function() 
-            LoadModule(79244238995921, "Steal Eggs from Goose!") 
+        Title = "Cargar: Steal Eggs from Goose!",
+        Callback = function()
+            LoadModule(79244238995921, "Steal Eggs from Goose!")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Boulder Creek", 
-        Callback = function() 
-            LoadModule(120073741652089, "Boulder Creek") 
+        Title = "Cargar: Boulder Creek",
+        Callback = function()
+            LoadModule(120073741652089, "Boulder Creek")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Unbox a Factory", 
-        Callback = function() 
-            LoadModule(138161219313147, "Unbox a Factory") 
+        Title = "Cargar: Unbox a Factory",
+        Callback = function()
+            LoadModule(138161219313147, "Unbox a Factory")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Build A Beehive", 
-        Callback = function() 
-            LoadModule(113604074601559, "Build A Beehive") 
+        Title = "Cargar: Build A Beehive",
+        Callback = function()
+            LoadModule(113604074601559, "Build A Beehive")
         end
     })
     Tabs.Games:AddButton({
-        Title = "Cargar: Sobrevive al Apocalipsis", 
-        Callback = function() 
-            LoadModule(90148635862803, "Sobrevive al Apocalipsis") 
+        Title = "Cargar: Sobrevive al Apocalipsis",
+        Callback = function()
+            LoadModule(90148635862803, "Sobrevive al Apocalipsis")
+        end
+    })
+    Tabs.Games:AddButton({
+        Title = "Cargar: AFILADO - PROFESIONAL",
+        Callback = function()
+            LoadModule(93853815957083, "AFILADO - PROFESIONAL")
         end
     })
 
     -- [[ UNIVERSAL ]]
     Tabs.Universal:AddSlider("WalkSpeed", {
-        Title = "Velocidad", 
-        Default = 16, 
-        Min = 16, 
-        Max = 300, 
-        Rounding = 1, 
-        Callback = function(v) 
-            pcall(function() 
-                game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v 
-            end) 
+        Title = "Velocidad",
+        Default = 16,
+        Min = 16,
+        Max = 300,
+        Rounding = 1,
+        Callback = function(v)
+            pcall(function()
+                game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
+            end)
         end
     })
     Tabs.Universal:AddToggle("UniversalESP", {Title = "ESP Jugadores (Básico)", Default = false, Callback = function(v)
         _G.UniversalESP = v
-        
+
         task.spawn(function()
             while _G.UniversalESP do
                 -- Luau Moderno (2024-2026): Ya no se usa pairs(), se itera directamente
@@ -344,7 +356,7 @@ local function InitHub()
                 end
                 task.wait(2)
             end
-            
+
             -- Sistema de limpieza si el usuario lo apaga
             if not _G.UniversalESP then
                 for _, player in game.Players:GetPlayers() do
@@ -360,14 +372,14 @@ local function InitHub()
     pcall(function()
         SaveManager:SetLibrary(Fluent)
         InterfaceManager:SetLibrary(Fluent)
-        
+
         -- Ignorar para no mezclar configuraciones visuales con las de hacks
         SaveManager:IgnoreThemeSettings()
-        
+
         -- Separar las configuraciones por juego (muy importante en Fluent)
         InterfaceManager:SetFolder("onzeHub")
         SaveManager:SetFolder("onzeHub/" .. tostring(GameID))
-        
+
         InterfaceManager:BuildInterfaceSection(Tabs.Settings)
         SaveManager:BuildConfigSection(Tabs.Settings)
     end)
@@ -381,23 +393,23 @@ local function InitHub()
         if Hum then
             task.wait(1)
             -- Aplicar ajustes guardados al reaparecer
-            if Fluent.Options.WalkSpeed then 
+            if Fluent.Options.WalkSpeed then
                 Hum.WalkSpeed = Fluent.Options.WalkSpeed.Value
             end
         end
     end)
-    
+
     -- [[ MARCA DE AGUA CUSTOMIZADA ]]
     task.spawn(function()
         local CoreGui = game:GetService("CoreGui")
         -- Limpiar previous watermark if exists
         local oldWm = CoreGui:FindFirstChild("onzeWatermark")
         if oldWm then oldWm:Destroy() end
-        
+
         local ScreenGui = Instance.new("ScreenGui")
         ScreenGui.Name = "onzeWatermark"
         ScreenGui.Parent = CoreGui
-        
+
         local TextLabel = Instance.new("TextLabel")
         TextLabel.Parent = ScreenGui
         TextLabel.AnchorPoint = Vector2.new(1, 0)
@@ -412,7 +424,7 @@ local function InitHub()
         TextLabel.TextSize = 14
         TextLabel.Font = Enum.Font.Code
         TextLabel.BackgroundTransparency = 0.2
-        
+
         local UICorner = Instance.new("UICorner")
         UICorner.CornerRadius = UDim.new(0, 4)
         UICorner.Parent = TextLabel
@@ -421,7 +433,7 @@ local function InitHub()
             local start = tick()
             game:GetService("RunService").RenderStepped:Wait()
             local fps = math.floor(1 / (tick() - start))
-            
+
             TextLabel.Text = string.format(" onzeHub VIP | FPS: %d | Ping: %dms ", fps, math.floor(game.Players.LocalPlayer:GetNetworkPing() * 1000) or 0)
         end
     end)
