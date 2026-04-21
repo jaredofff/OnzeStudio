@@ -1,165 +1,256 @@
+--[[
+    🚀 onzeHub - AFILADO: PROFESIONAL (Senior Module)
+    Developer: Antigravity (Senior Luau Scripting)
+    Optimization: O(n) Player Iteration, Hex-Color ESP, Connection Management
+]]
+
 local GameModule = {}
 
+-- [[ LIBRERÍAS Y SERVICIOS ]]
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- [[ VARIABLES DE ESTADO ESTÁTICO ]]
+local states = {
+    KillAura = false,
+    Hitbox = false,
+    ESP = false,
+    Speed = false,
+    InfJump = false
+}
+
+-- [[ REGISTRO DE CONEXIONES (CLEANUP SYSTEM) ]]
+local connections = {
+    KillAura = nil,
+    Hitbox = nil,
+    ESP = {},
+    Speed = nil,
+    InfJump = nil
+}
+
+-- [[ FUNCIONES DE UTILIDAD (PROFESIONAL) ]]
+local function GetCharacter(player)
+    return player.Character or player.CharacterAdded:Wait()
+end
+
+local function IsAlive(model)
+    if not model then return false end
+    local humanoid = model:FindFirstChildOfClass("Humanoid")
+    return humanoid and humanoid.Health > 0
+end
+
+-- [[ SISTEMA DE LIMPIEZA DE ESP ]]
+local function ClearESP()
+    for _, player in Players:GetPlayers() do
+        if player.Character then
+            local hl = player.Character:FindFirstChild("oH_Premium_ESP")
+            if hl then hl:Destroy() end
+        end
+    end
+    for i, conn in connections.ESP do
+        if typeof(conn) == "RBXScriptConnection" then conn:Disconnect() end
+        connections.ESP[i] = nil
+    end
+end
+
+-- [[ LÓGICA PRINCIPAL DEL MÓDULO ]]
 function GameModule.Load(Tabs, Window, Fluent, Options)
-    local MainSection = Tabs.Specific:AddSection("⚡ Afilado: Profesional")
+    local MainSection = Tabs.Specific:AddSection("⚔️ Combate Profesional")
     local ESPSection = Tabs.Specific:AddSection("👁️ Visuales Elite")
-    local MovementSection = Tabs.Specific:AddSection("🚀 Movimiento Pro")
-    
-    local getgenv = getgenv or function() return _G end
-    local env = getgenv()
-    env.AfiladoKillAura = false
-    env.AfiladoHitbox = false
-    env.AfiladoESP = false
-    env.AfiladoSpeed = false
-    env.AfiladoInfJump = false
-    
-    -- [[ AFILADO: KillAura Professional ]]
-    MainSection:AddToggle("AfiladoKillAura", {
-        Title = "KillAura Elite", 
-        Description = "Detecta y ataca automáticamente a los enemigos en un radio optimizado.",
+    local MovementSection = Tabs.Specific:AddSection("🏃 Movimiento Avanzado")
+
+    ---------------------------------------------------------------------------
+    -- [[ KILL AURA (OPTIMIZADO) ]]
+    ---------------------------------------------------------------------------
+    MainSection:AddToggle("Killaura", {
+        Title = "KillAura Elite",
+        Description = "Ataque inteligente en área 360° con validación de salud.",
         Default = false,
         Callback = function(state)
-            env.AfiladoKillAura = state
-            task.spawn(function()
-                while env.AfiladoKillAura do
-                    pcall(function()
-                        local player = game.Players.LocalPlayer
-                        local char = player.Character
-                        if char and char:FindFirstChild("HumanoidRootPart") then
-                            local weapon = char:FindFirstChildOfClass("Tool")
-                            if weapon and weapon:FindFirstChild("Handle") then
-                                for _, v in pairs(workspace:GetDescendants()) do
-                                    if v:IsA("Model") and v:FindFirstChild("Humanoid") and v ~= char then
-                                        local targetHrp = v:FindFirstChild("HumanoidRootPart") or v:FindFirstChild("Torso")
-                                        if targetHrp and (targetHrp.Position - char.HumanoidRootPart.Position).Magnitude <= 20 then
-                                            if firetouchinterest then
-                                                firetouchinterest(weapon.Handle, targetHrp, 0)
-                                                task.wait(0.01)
-                                                firetouchinterest(weapon.Handle, targetHrp, 1)
-                                            end
-                                        end
+            states.KillAura = state
+            
+            -- Desconectar si existe una previa
+            if connections.KillAura then 
+                connections.KillAura:Disconnect() 
+                connections.KillAura = nil
+            end
+
+            if state then
+                connections.KillAura = RunService.Heartbeat:Connect(function()
+                    local char = LocalPlayer.Character
+                    if not IsAlive(char) then return end
+                    
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    local weapon = char:FindFirstChildOfClass("Tool")
+                    if not (hrp and weapon and weapon:FindFirstChild("Handle")) then return end
+
+                    -- Iteración eficiente por jugadores (Evita GetDescendants)
+                    for _, player in Players:GetPlayers() do
+                        if player ~= LocalPlayer and player.Character then
+                            local targetHrp = player.Character:FindFirstChild("HumanoidRootPart")
+                            if targetHrp and IsAlive(player.Character) then
+                                local distance = (hrp.Position - targetHrp.Position).Magnitude
+                                if distance <= 20 then
+                                    -- Protocolo de daño (FireTouchInterest es el estándar compatible con mayoría de exploits)
+                                    if firetouchinterest then
+                                        firetouchinterest(weapon.Handle, targetHrp, 0)
+                                        task.wait() -- Debounce de seguridad
+                                        firetouchinterest(weapon.Handle, targetHrp, 1)
                                     end
                                 end
                             end
                         end
-                    end)
-                    task.wait(0.1)
-                end
-            end)
-        end
-    })
-
-    -- [[ AFILADO: Hitbox Expander ]]
-    MainSection:AddToggle("AfiladoHitbox", {
-        Title = "Hitbox Profesional", 
-        Description = "Aumenta el tamaño de los enemigos para asegurar cada golpe.",
-        Default = false,
-        Callback = function(state)
-            env.AfiladoHitbox = state
-            task.spawn(function()
-                while env.AfiladoHitbox do
-                    pcall(function()
-                        for _, v in pairs(workspace:GetDescendants()) do
-                            if v:IsA("Model") and v:FindFirstChild("Humanoid") and v ~= game.Players.LocalPlayer.Character then
-                                local hrp = v:FindFirstChild("HumanoidRootPart")
-                                if hrp then
-                                    hrp.Size = Vector3.new(6, 6, 6)
-                                    hrp.Transparency = 0.7
-                                    hrp.CanCollide = false
-                                end
-                            end
-                        end
-                    end)
-                    task.wait(2)
-                end
-            end)
-        end
-    })
-
-    -- [[ VISUALES: ESP Profesionales ]]
-    ESPSection:AddToggle("AfiladoESP", {
-        Title = "ESP Ultra (Skelet/Box)", 
-        Description = "Localiza a todos los jugadores en el mapa con alta precisión.",
-        Default = false,
-        Callback = function(state)
-            env.AfiladoESP = state
-            task.spawn(function()
-                while env.AfiladoESP do
-                    pcall(function()
-                        for _, player in pairs(game.Players:GetPlayers()) do
-                            if player ~= game.Players.LocalPlayer and player.Character then
-                                if not player.Character:FindFirstChild("Afilado_ESP") then
-                                    local hl = Instance.new("Highlight")
-                                    hl.Name = "Afilado_ESP"
-                                    hl.FillColor = Color3.fromRGB(0, 255, 255)
-                                    hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-                                    hl.FillTransparency = 0.5
-                                    hl.Parent = player.Character
-                                end
-                            end
-                        end
-                    end)
-                    task.wait(2)
-                end
-                if not env.AfiladoESP then
-                    for _, player in pairs(game.Players:GetPlayers()) do
-                        if player.Character and player.Character:FindFirstChild("Afilado_ESP") then
-                            player.Character.Afilado_ESP:Destroy()
-                        end
-                    end
-                end
-            end)
-        end
-    })
-
-    -- [[ MOVIMIENTO: CFrame Speed Elite ]]
-    MovementSection:AddToggle("AfiladoSpeed", {
-        Title = "Sprint Profesional (CFrame)", 
-        Description = "Multiplica tu velocidad de movimiento de forma indetectable.",
-        Default = false,
-        Callback = function(state)
-            env.AfiladoSpeed = state
-            task.spawn(function()
-                local rs = game:GetService("RunService")
-                while env.AfiladoSpeed do
-                    pcall(function()
-                        local char = game.Players.LocalPlayer.Character
-                        local hum = char and char:FindFirstChild("Humanoid")
-                        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-                        if hum and hrp and hum.MoveDirection.Magnitude > 0 then
-                            hrp.CFrame = hrp.CFrame + (hum.MoveDirection * 0.75)
-                        end
-                    end)
-                    rs.Heartbeat:Wait()
-                end
-            end)
-        end
-    })
-
-    -- [[ MOVIMIENTO: Infinite Jump ]]
-    MovementSection:AddToggle("AfiladoInfJump", {
-        Title = "Saltos Infinitos Elite", 
-        Description = "Vuela literalmente saltando infinitamente en el aire.",
-        Default = false,
-        Callback = function(state)
-            env.AfiladoInfJump = state
-            if state then
-                game:GetService("UserInputService").JumpRequest:Connect(function()
-                    if env.AfiladoInfJump then
-                        pcall(function()
-                            game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-                        end)
                     end
                 end)
             end
         end
     })
 
-    -- Premium Watermark specific to this module
+    ---------------------------------------------------------------------------
+    -- [[ HITBOX EXPANDER (ROBUSTO) ]]
+    ---------------------------------------------------------------------------
+    MainSection:AddToggle("Hitbox", {
+        Title = "Expandir Hitboxes",
+        Description = "Aumenta el volumen de impacto de enemigos cercanos.",
+        Default = false,
+        Callback = function(state)
+            states.Hitbox = state
+            
+            if connections.Hitbox then 
+                connections.Hitbox:Disconnect()
+                connections.Hitbox = nil
+            end
+
+            if state then
+                connections.Hitbox = RunService.Heartbeat:Connect(function()
+                    for _, player in Players:GetPlayers() do
+                        if player ~= LocalPlayer and player.Character then
+                            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+                            if hrp then
+                                -- Aplicar escala premium
+                                hrp.Size = Vector3.new(20, 20, 20)
+                                hrp.Transparency = 0.8
+                                hrp.CanCollide = false
+                            end
+                        end
+                    end
+                end)
+            else
+                -- Limpieza inmediata: Restaurar tamaños originales
+                for _, player in Players:GetPlayers() do
+                    if player.Character then
+                        local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            hrp.Size = Vector3.new(2, 2, 1)
+                            hrp.Transparency = 0
+                            hrp.CanCollide = true
+                        end
+                    end
+                end
+            end
+        end
+    })
+
+    ---------------------------------------------------------------------------
+    -- [[ ESP ELITE (MODERNO) ]]
+    ---------------------------------------------------------------------------
+    local function ApplyESP(player)
+        if player == LocalPlayer then return end
+        
+        local function CreateHighlight(character)
+            if not states.ESP then return end
+            if character:FindFirstChild("oH_Premium_ESP") then return end
+            
+            local highlight = Instance.new("Highlight")
+            highlight.Name = "oH_Premium_ESP"
+            highlight.FillColor = Color3.fromRGB(0, 255, 127) -- Esmeralda Premium
+            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+            highlight.FillTransparency = 0.5
+            highlight.Parent = character
+        end
+
+        if player.Character then CreateHighlight(player.Character) end
+        connections.ESP[player.Name] = player.CharacterAdded:Connect(CreateHighlight)
+    end
+
+    ESPSection:AddToggle("ESP", {
+        Title = "ESP Pro (Highlights)",
+        Description = "Visión de rayos X alta fidelidad con persistencia tras muerte.",
+        Default = false,
+        Callback = function(state)
+            states.ESP = state
+            if state then
+                for _, player in Players:GetPlayers() do ApplyESP(player) end
+                table.insert(connections.ESP, Players.PlayerAdded:Connect(ApplyESP))
+            else
+                ClearESP()
+            end
+        end
+    })
+
+    ---------------------------------------------------------------------------
+    -- [[ VELOCIDAD CFRAME (LOW DETECTION) ]]
+    ---------------------------------------------------------------------------
+    MovementSection:AddToggle("SpeedMode", {
+        Title = "CFrame Speed",
+        Description = "Sprint asistido mediante manipulación de fotogramas.",
+        Default = false,
+        Callback = function(state)
+            states.Speed = state
+            if connections.Speed then
+                connections.Speed:Disconnect()
+                connections.Speed = nil
+            end
+
+            if state then
+                connections.Speed = RunService.Heartbeat:Connect(function(deltaTime)
+                    local char = LocalPlayer.Character
+                    local hum = char and char:FindFirstChildOfClass("Humanoid")
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    
+                    if hum and hrp and hum.MoveDirection.Magnitude > 0 then
+                        -- Cálculo de desplazamiento basado en deltaTime para estabilidad
+                        hrp.CFrame = hrp.CFrame + (hum.MoveDirection * (0.8 * 60 * deltaTime))
+                    end
+                end)
+            end
+        end
+    })
+
+    ---------------------------------------------------------------------------
+    -- [[ INFINITE JUMP (CLEAN) ]]
+    ---------------------------------------------------------------------------
+    MovementSection:AddToggle("InfJump", {
+        Title = "Saltos Infinitos",
+        Description = "Permite saltar en el aire eliminando la gravedad.",
+        Default = false,
+        Callback = function(state)
+            states.InfJump = state
+            if connections.InfJump then
+                connections.InfJump:Disconnect()
+                connections.InfJump = nil
+            end
+
+            if state then
+                connections.InfJump = UserInputService.JumpRequest:Connect(function()
+                    if states.InfJump then
+                        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                        if hum then
+                            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                        end
+                    end
+                end)
+            end
+        end
+    })
+
+    -- Notificación de Bienvenida Profesional
     Fluent:Notify({
-        Title = "onzeHub: AFILADO",
-        Content = "Cargando configuración PROFESIONAL...",
-        Duration = 5
+        Title = "onzeHub Premium",
+        Content = "Módulo AFILADO v2.0 (Optimizado) cargado correctamente.",
+        Duration = 6
     })
 end
 
